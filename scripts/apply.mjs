@@ -126,8 +126,14 @@ const injectExpr = `(() => {
   s2.textContent = ${JSON.stringify(themeCss)};
   document.head.append(s1, s2);
   de.setAttribute("data-zds-theme", ${JSON.stringify(THEME)});
-  ${forceDark ? 'if (!de.classList.contains("dark")) { de.classList.add("dark"); de.dataset.zdsForcedDark = "1"; }' : ""}
-  ${forceLight ? 'if (de.classList.contains("dark")) { de.classList.remove("dark"); de.dataset.zdsForcedLight = "1"; }' : ""}
+  ${forceDark ? `if (!de.classList.contains("dark")) { de.classList.add("dark"); de.dataset.zdsForcedDark = "1"; }
+  if (!de.dataset.zdsOrigTheme) de.dataset.zdsOrigTheme = de.classList.contains("theme-zai-dark") ? "theme-zai-dark" : "theme-zai-light";
+  de.classList.remove("theme-zai-light", "theme-zai-dark");
+  de.classList.add("theme-zai-dark");` : ""}
+  ${forceLight ? `if (de.classList.contains("dark")) { de.classList.remove("dark"); de.dataset.zdsForcedDark = ""; }
+  if (!de.dataset.zdsOrigTheme) de.dataset.zdsOrigTheme = de.classList.contains("theme-zai-dark") ? "theme-zai-dark" : "theme-zai-light";
+  de.classList.remove("theme-zai-light", "theme-zai-dark");
+  de.classList.add("theme-zai-light");` : ""}
   return "applied";
 })()`;
 

@@ -22,6 +22,12 @@ const restoreExpr = `(() => {
     return !!el;
   });
   de.removeAttribute("data-zds-theme");
+  if (de.dataset.zdsForcedDark) { de.classList.remove("dark"); delete de.dataset.zdsForcedDark; }
+  if (de.dataset.zdsOrigTheme) {
+    de.classList.remove("theme-zai-light", "theme-zai-dark");
+    de.classList.add(de.dataset.zdsOrigTheme);
+    delete de.dataset.zdsOrigTheme;
+  }
   return removed;
 })()`;
 
