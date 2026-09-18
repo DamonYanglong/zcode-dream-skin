@@ -62,7 +62,11 @@ themes/<id>/
 
 ## 致谢
 
-- [Fei-Away/Codex-Dream-Skin](https://github.com/Fei-Away/Codex-Dream-Skin) —— 工程范式与安全模型
+本项目站在 [Fei-Away/Codex-Dream-Skin](https://github.com/Fei-Away/Codex-Dream-Skin) 的肩膀上，
+感谢它贡献的工程范式与产品经验：本机回环 CDP 注入与安全模型、主题包资产（MIT）、
+以及「首页图片清晰 / 任务页 ambient 蒙层」的双态交互策略。没有这个优秀的开源项目，
+就没有 ZCode Dream Skin。也感谢 [seansong-ideogram](https://github.com/seansong-ideogram)
+创作的 Gothic Void Crusade 背景艺术（MIT）。
 - Gothic Void Crusade 背景图由 [seansong-ideogram](https://github.com/seansong-ideogram) 创作（MIT）
 
 ## 接入 Codex Dream Skin 主题市场

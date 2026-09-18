@@ -117,6 +117,20 @@ html:not(.dark) ::-webkit-scrollbar-thumb:hover {
   background: rgba(116, 90, 40, 0.45) !important;
 }
 
+/* ---- 双态：首页图片裸露清晰，对话页 ambient 蒙层（对齐 Codex Dream Skin 首页策略）----
+ * 钩子：.history-message 仅在对话页存在；首页无消息 → 主面板/顶栏透明，
+ * 文字都在带 card 底的容器里，可读性由 card/popover/input 近实底保障。
+ */
+html.dark:not(:has(.history-message)) {
+  --color-panel: transparent !important;
+  --color-header: transparent !important;
+}
+/* 浅色首页：深字直接叠暗图不可读，保留轻蒙层折中（图仍清晰可见） */
+html:not(.dark):not(:has(.history-message)) {
+  --color-panel: rgba(243, 234, 215, 0.5) !important;
+  --color-header: rgba(243, 234, 215, 0.5) !important;
+}
+
 /* ---- 精修 ---- */
 html.dark ::selection {
   background: rgba(200, 165, 90, 0.35) !important;

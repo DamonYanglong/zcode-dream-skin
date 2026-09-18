@@ -81,3 +81,12 @@ html:not(.dark) {
   --color-trajectory-user: hsl(40.9 60.0% 38.0%) !important;
 }
 
+/* 双态：首页图片裸露（对齐 Codex Dream Skin 首页策略），对话页 ambient 蒙层 */
+html.dark:not(:has(.history-message)) {
+  --color-panel: transparent !important;
+  --color-header: transparent !important;
+}
+html:not(.dark):not(:has(.history-message)) {
+  --color-panel: hsl(30.0 2.9% 94% / 0.5) !important;
+  --color-header: hsl(30.0 2.9% 94% / 0.5) !important;
+}

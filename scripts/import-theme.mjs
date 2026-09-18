@@ -139,6 +139,7 @@ function derivePalettes(srcColors, avgRgb) {
     fgSubtlest: hslCss([h, sat(0.15), 0.52]),
     terminalBg: panel_(sat(0.2), 94, 0.95),
     trajUser: hslCss([aHue, aSat, 0.38]),
+    homeVeil: panel_(sat(0.3), 94, 0.5),
   };
   return { dark, light };
 }
@@ -206,6 +207,15 @@ html {
 
 ${themeCssBlock(".dark", palettes.dark, focus)}
 ${themeCssBlock(":not(.dark)", palettes.light, focus)}
+/* 双态：首页图片裸露（对齐 Codex Dream Skin 首页策略），对话页 ambient 蒙层 */
+html.dark:not(:has(.history-message)) {
+  --color-panel: transparent !important;
+  --color-header: transparent !important;
+}
+html:not(.dark):not(:has(.history-message)) {
+  --color-panel: ${normalize(palettes.light.homeVeil)} !important;
+  --color-header: ${normalize(palettes.light.homeVeil)} !important;
+}
 `;
 }
 

@@ -32,16 +32,23 @@ if (typeof WebSocket !== "function") {
 }
 
 // ---------- 读取主题包 ----------
-const themeDir = path.join(root, "themes", THEME);
-const themeJsonPath = path.join(themeDir, "theme.json");
-const themeCssPath = path.join(themeDir, "theme.css");
-for (const p of [themeJsonPath, themeCssPath]) {
-  if (!fs.existsSync(p)) {
-    console.error(`[zds] 主题不完整，缺少 ${p}`);
-    process.exit(1);
-  }
+// 查找顺序：ZDS_THEMES_DIR（用户主题目录，菜单栏 app 用）→ 仓库内 themes/
+const userThemesDir = process.env.ZDS_THEMES_DIR || "";
+const candidates = [
+  userThemesDir ? path.join(userThemesDir, THEME) : null,
+  path.join(root, "themes", THEME),
+].filter(Boolean);
+const themeDir = candidates.find((p) => fs.existsSync(path.join(p, "theme.json")));
+if (!themeDir) {
+  console.error(`[zds] 找不到主题 «${THEME}»（查找了: ${candidates.join(", ")}）`);
+  process.exit(1);
 }
-const theme = JSON.parse(fs.readFileSync(themeJsonPath, "utf8"));
+const theme = JSON.parse(fs.readFileSync(path.join(themeDir, "theme.json"), "utf8"));
+const themeCssPath = path.join(themeDir, "theme.css");
+if (!fs.existsSync(themeCssPath)) {
+  console.error(`[zds] 主题不完整，缺少 ${themeCssPath}`);
+  process.exit(1);
+}
 if (theme.schema !== "zcode-dream-skin-theme/1") {
   console.error(`[zds] 不支持的主题 schema: ${theme.schema}`);
   process.exit(1);
@@ -177,4 +184,12 @@ for (const page of pages) {
 }
 
 console.log(`[zds] 完成：${okCount}/${pages.length} 个页面成功应用主题 «${theme.name}»。`);
+
+// 状态文件：菜单栏 app 读取以显示当前主题
+try {
+  const stateDir = process.env.ZDS_STATE_DIR ||
+    path.join(process.env.HOME || "", "Library/Application Support/ZCodeDreamSkin");
+  fs.mkdirSync(stateDir, { recursive: true });
+  fs.writeFileSync(path.join(stateDir, "current-theme"), THEME, "utf8");
+} catch { /* 状态文件失败不影响注入 */ }
 process.exit(okCount > 0 ? 0 : 1);

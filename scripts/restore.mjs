@@ -74,3 +74,12 @@ for (const page of pages) {
 }
 console.log(`[zds] 已恢复官方外观（${touched} 个页面曾有注入残留）。`);
 console.log("[zds] 提示：如需彻底关闭调试端口，请退出 ZCode 后正常重新打开。");
+
+// 清除当前主题状态文件
+try {
+  const fs = await import("node:fs");
+  const path = await import("node:path");
+  const stateDir = process.env.ZDS_STATE_DIR ||
+    path.join(process.env.HOME || "", "Library/Application Support/ZCodeDreamSkin");
+  fs.rmSync(path.join(stateDir, "current-theme"), { force: true });
+} catch { /* 忽略 */ }
