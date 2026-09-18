@@ -56,14 +56,18 @@ if (theme.schema !== "zcode-dream-skin-theme/1") {
 }
 const themeCss = fs.readFileSync(themeCssPath, "utf8");
 
-let bgDataUri = "";
+// 背景引用改用 file:// URL：data URI 超过 ~2MB 会超出 Chromium custom property
+// 值上限被静默置空（大肥鱼/三上悠亚 1.8MB PNG 踩过），file URL 零体积且免传输。
+let bgFileUrl = "";
 if (theme.image) {
   const imgPath = path.join(themeDir, theme.image);
-  const buf = fs.readFileSync(imgPath);
-  const mime = theme.image.endsWith(".png") ? "image/png"
-    : theme.image.endsWith(".webp") ? "image/webp" : "image/jpeg";
-  bgDataUri = `data:${mime};base64,${buf.toString("base64")}`;
-  console.log(`[zds] 背景图 ${theme.image}（${(buf.length / 1024).toFixed(0)} KiB）已内嵌。`);
+  if (!fs.existsSync(imgPath)) {
+    console.error(`[zds] 背景图缺失: ${imgPath}`);
+    process.exit(1);
+  }
+  bgFileUrl = "file://" + imgPath.split("/").map(encodeURIComponent).join("/");
+  const { size } = fs.statSync(imgPath);
+  console.log(`[zds] 背景图 ${theme.image}（${(size / 1024).toFixed(0)} KiB）→ ${bgFileUrl}`);
 }
 
 // ---------- CDP 工具 ----------
@@ -121,7 +125,7 @@ const injectExpr = `(() => {
   document.getElementById(${JSON.stringify(STYLE_THEME_ID)})?.remove();
   const s1 = document.createElement("style");
   s1.id = ${JSON.stringify(STYLE_ROOT_ID)};
-  s1.textContent = ":root{--zds-bg:url(" + ${JSON.stringify(bgDataUri)} + ")}";
+  s1.textContent = ":root{--zds-bg:url(" + ${JSON.stringify(bgFileUrl)} + ")}";
   const s2 = document.createElement("style");
   s2.id = ${JSON.stringify(STYLE_THEME_ID)};
   s2.textContent = ${JSON.stringify(themeCss)};
