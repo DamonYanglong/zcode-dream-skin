@@ -52,8 +52,12 @@ func runEngine(script: String, args: String, completion: @escaping (String?) -> 
     DispatchQueue.global(qos: .userInitiated).async {
         let p = Process()
         p.executableURL = URL(fileURLWithPath: "/bin/zsh")
-        // login shell 以继承用户 PATH 找到 node
+        // login shell 以继承用户 PATH 找到 node；主题与状态都指向用户支持目录
         p.arguments = ["-lc", "node \"\(scriptsDir.path)/\(script)\" \(args) 2>&1"]
+        var env = ProcessInfo.processInfo.environment
+        env["ZDS_THEMES_DIR"] = userThemesDir.path
+        env["ZDS_STATE_DIR"] = appSupport.path
+        p.environment = env
         let out = Pipe()
         p.standardOutput = out
         p.standardError = out

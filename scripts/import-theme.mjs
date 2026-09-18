@@ -276,7 +276,9 @@ function loadSourceTheme(dir) {
 function importOne(srcDir) {
   const { meta, imgPath, imgName } = loadSourceTheme(srcDir);
   const id = `codex-${meta.id || path.basename(srcDir)}`.replace(/[^a-z0-9-]/gi, "-").toLowerCase();
-  const destDir = path.join(root, "themes", id);
+  // 目的地优先取 ZDS_THEMES_DIR（菜单栏 app 场景落到用户目录，bundle 内不可写）
+  const themesRoot = process.env.ZDS_THEMES_DIR || path.join(root, "themes");
+  const destDir = path.join(themesRoot, id);
   fs.mkdirSync(destDir, { recursive: true });
   fs.copyFileSync(imgPath, path.join(destDir, imgName));
 
