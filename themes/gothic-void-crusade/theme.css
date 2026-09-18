@@ -26,8 +26,8 @@ html {
 html.dark {
   /* 页面/区域底色 → 半透明，露出背景 */
   --color-background: transparent !important;
-  --color-header: rgba(23, 21, 19, 0.72) !important;
-  --color-panel: rgba(23, 21, 19, 0.72) !important;
+  --color-header: rgba(23, 21, 19, 0.8) !important;
+  --color-panel: rgba(23, 21, 19, 0.82) !important;
   --color-sidebar: rgba(13, 13, 14, 0.82) !important;
   --color-background-alt: rgba(33, 29, 24, 0.55) !important;
   --color-background-win-alt: rgba(23, 21, 19, 0.85) !important;
@@ -61,6 +61,49 @@ html.dark {
   /* 终端区：压暗保持沉浸 */
   --color-terminal-bg: rgba(13, 13, 14, 0.92) !important;
   --color-terminal-selection: rgba(200, 165, 90, 0.26) !important;
+}
+
+/* ---- 浅色模式强制压成主题暗色（换肤会话期间无论系统外观如何都呈现主题设计） ----
+ * 浅色原值：--color-foreground = neutral-800（深字）、panel/card/input = #fff
+ * 因此除底色外必须同时翻转前景文字，否则深底深字不可读。
+ */
+html:not(.dark) {
+  --color-background: transparent !important;
+  --color-background-alt: rgba(33, 29, 24, 0.55) !important;
+  --color-background-win-alt: rgba(23, 21, 19, 0.85) !important;
+  --color-header: rgba(23, 21, 19, 0.8) !important;
+  --color-panel: rgba(23, 21, 19, 0.82) !important;
+  --color-sidebar: rgba(13, 13, 14, 0.82) !important;
+  --color-card: rgba(33, 29, 24, 0.86) !important;
+  --color-card-selected: rgba(200, 165, 90, 0.14) !important;
+  --color-popover: rgba(33, 29, 24, 0.97) !important;
+  --color-popover-header: rgba(23, 21, 19, 0.97) !important;
+  --color-popover-foreground: #f3ead7 !important;
+  --color-input: rgba(23, 21, 19, 0.9) !important;
+  --color-input-focused: rgba(23, 21, 19, 0.96) !important;
+
+  --color-surface: rgba(200, 165, 90, 0.05) !important;
+  --color-surface-hover: rgba(200, 165, 90, 0.1) !important;
+  --color-hover: rgba(200, 165, 90, 0.1) !important;
+  --color-selected: rgba(200, 165, 90, 0.16) !important;
+
+  --color-brand: #c8a55a !important;
+  --color-accent: rgba(200, 165, 90, 0.14) !important;
+
+  --color-border: rgba(200, 165, 90, 0.24) !important;
+  --color-border-hover: rgba(200, 165, 90, 0.45) !important;
+
+  /* 前景文字：深字 → 暖白（对齐暗色模式的可读性） */
+  --color-foreground: #f3ead7 !important;
+  --color-foreground-subtle: #b5a386 !important;
+  --color-foreground-subtlest: #8f8168 !important;
+
+  --color-terminal-bg: rgba(13, 13, 14, 0.92) !important;
+  --color-terminal-fg: #f3ead7 !important;
+  --color-terminal-selection: rgba(200, 165, 90, 0.26) !important;
+
+  --color-trajectory-user: #e3c27a !important;
+  --color-trajectory-tool-call: #c87a5a !important;
 }
 
 /* ---- 精修 ---- */

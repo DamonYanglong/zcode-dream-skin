@@ -132,9 +132,17 @@ const evalCmd = (expr) => ({
 });
 
 // ---------- 主流程 ----------
+// /json/version 通了不代表渲染页面已创建（启动时序），轮询等待 page target 出现。
+const WAIT_PAGE_MS = Number(argOf("--wait-page-ms", "30000"));
 let targets;
 try {
-  targets = await listTargets();
+  const deadline = Date.now() + WAIT_PAGE_MS;
+  for (;;) {
+    targets = await listTargets();
+    if (targets.some((t) => t.type === "page" && t.webSocketDebuggerUrl)) break;
+    if (Date.now() >= deadline) break;
+    await new Promise((r) => setTimeout(r, 500));
+  }
 } catch (e) {
   console.error(`[zds] 无法连接 CDP 端点 http://${HOST}:${PORT} —— ${e.message}`);
   console.error("[zds] 请先用 scripts/start-themed.sh 以调试端口启动 ZCode。");
