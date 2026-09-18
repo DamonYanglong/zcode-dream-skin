@@ -4,3 +4,6 @@ node_modules/
 
 # 上游 NOTICE 声明不可再分发的导入素材（本地可用，不入库）
 themes/codex-preset-arina-hashimoto/
+
+build/
+dist/
