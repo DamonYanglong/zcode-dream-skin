@@ -8,6 +8,10 @@ html {
   background-repeat: no-repeat !important;
   background-attachment: fixed !important;
 }
+/* 浅色仿 Codex 手法：背景图先叠暖白蒙层提亮雾化，控件再半透明衔接 */
+html:not(.dark) {
+  background-image: linear-gradient(hsl(30.0 2.9% 94% / 0.6), hsl(30.0 2.9% 94% / 0.6)), var(--zds-bg) !important;
+}
 
 html.dark {
   --color-background: transparent !important;

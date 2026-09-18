@@ -8,7 +8,10 @@
  * 注入位置在官方样式表之后且带 !important，特异性高于原生 .dark 规则。
  */
 
-/* ---- 背景层 ---- */
+/* ---- 背景层 ----
+ * 浅色模式仿 Codex 手法：暗图先叠暖白蒙层整体提亮雾化，控件再半透明衔接，
+ * 避免实底白块在暗图上像补丁。暗色模式暗图原生协调，不加蒙层。
+ */
 html {
   background-image: var(--zds-bg) !important;
   background-size: cover !important;
@@ -68,18 +71,19 @@ html.dark {
  * 金色强调压深一档（#96742e）保证浅底对比度。
  */
 html:not(.dark) {
+  background-image: linear-gradient(rgba(243, 234, 215, 0.6), rgba(243, 234, 215, 0.6)), var(--zds-bg) !important;
   --color-background: transparent !important;
   --color-background-alt: rgba(248, 243, 230, 0.55) !important;
   --color-background-win-alt: rgba(243, 234, 215, 0.85) !important;
   --color-header: rgba(243, 234, 215, 0.78) !important;
   --color-panel: rgba(243, 234, 215, 0.8) !important;
   --color-sidebar: rgba(238, 231, 213, 0.86) !important;
-  --color-card: rgba(248, 243, 230, 0.88) !important;
+  --color-card: rgba(248, 243, 230, 0.66) !important;
   --color-card-selected: rgba(200, 165, 90, 0.2) !important;
-  --color-popover: rgba(248, 243, 230, 0.97) !important;
+  --color-popover: rgba(248, 243, 230, 0.9) !important;
   --color-popover-header: rgba(243, 234, 215, 0.97) !important;
   --color-popover-foreground: #2d2620 !important;
-  --color-input: rgba(248, 243, 230, 0.92) !important;
+  --color-input: rgba(248, 243, 230, 0.72) !important;
   --color-input-focused: rgba(252, 248, 238, 0.96) !important;
 
   --color-surface: rgba(116, 53, 46, 0.05) !important;

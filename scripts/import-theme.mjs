@@ -142,6 +142,7 @@ function derivePalettes(srcColors, avgRgb) {
     terminalBg: panel_(sat(0.2), 94, 0.95),
     trajUser: hslCss([aHue, aSat, 0.38]),
     homeVeil: panel_(sat(0.3), 94, 0.38),
+    bgVeil: panel_(sat(0.3), 94, 0.6),
     dialogVeil: panel_(sat(0.3), 94, 0.72),
     sidebarBg: panel_(sat(0.3), 94, 0.72),
   };
@@ -198,6 +199,7 @@ function themeCssBlock(selector, p, focus) {
 
 function generateThemeCss(palettes, focus, themeName) {
   const pos = `${Math.round((focus?.focusX ?? 0.7) * 100)}% ${Math.round((focus?.focusY ?? 0.5) * 100)}%`;
+  const veil = normalize(palettes.light.bgVeil);
   return `/*
  * zcode-dream-skin · ${themeName}（AUTO-GENERATED —— 配色由背景图自动推导，可手调）
  */
@@ -207,6 +209,10 @@ html {
   background-position: ${pos} !important;
   background-repeat: no-repeat !important;
   background-attachment: fixed !important;
+}
+/* 浅色仿 Codex 手法：背景图先叠暖白蒙层提亮雾化，控件再半透明衔接 */
+html:not(.dark) {
+  background-image: linear-gradient(${veil}, ${veil}), var(--zds-bg) !important;
 }
 
 ${themeCssBlock(".dark", palettes.dark, focus)}
