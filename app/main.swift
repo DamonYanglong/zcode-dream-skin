@@ -135,15 +135,15 @@ final class MenuController: NSObject, NSMenuDelegate {
         }
 
         menu.addItem(.separator())
-        self.addItem("以换肤模式启动 ZCode…", #selector(startThemed(_:)))
-        self.addItem("重新注入当前主题", #selector(reapply(_:)))
-        self.addItem("恢复官方外观", #selector(restore(_:)))
-        self.addItem("导入 Codex 主题库全部…", #selector(importAll(_:)))
-        self.addItem("打开主题文件夹", #selector(openThemes(_:)))
+        self.addItem("以换肤模式启动 ZCode…", #selector(startThemed))
+        self.addItem("重新注入当前主题", #selector(reapply))
+        self.addItem("恢复官方外观", #selector(restore))
+        self.addItem("导入 Codex 主题库全部…", #selector(importAll))
+        self.addItem("打开主题文件夹", #selector(openThemes))
         menu.addItem(.separator())
-        self.addItem("关于 ZCode Dream Skin", #selector(about(_:)))
+        self.addItem("关于 ZCode Dream Skin", #selector(about))
         menu.addItem(.separator())
-        self.addItem("退出", #selector(quit(_:)))
+        self.addItem("退出", #selector(quit))
     }
 
     private func addItem(_ title: String, _ action: Selector) {

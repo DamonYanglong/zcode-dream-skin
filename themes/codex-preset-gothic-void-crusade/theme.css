@@ -81,12 +81,23 @@ html:not(.dark) {
   --color-trajectory-user: hsl(40.9 60.0% 38.0%) !important;
 }
 
-/* 双态：首页图片裸露（对齐 Codex Dream Skin 首页策略），对话页 ambient 蒙层 */
+/* 双态：实测 ZCode 全窗口底色来自最外层 --color-background-alt；侧栏 aside 无独立底色 */
+html.dark:has(.history-message) {
+  --color-background-alt: hsl(30.0 5.7% 9% / 0.78) !important;
+}
 html.dark:not(:has(.history-message)) {
-  --color-panel: transparent !important;
-  --color-header: transparent !important;
+  --color-background-alt: transparent !important;
+}
+html:not(.dark):has(.history-message) {
+  --color-background-alt: hsl(30.0 2.9% 94% / 0.72) !important;
 }
 html:not(.dark):not(:has(.history-message)) {
-  --color-panel: hsl(30.0 2.9% 94% / 0.5) !important;
-  --color-header: hsl(30.0 2.9% 94% / 0.5) !important;
+  --color-background-alt: hsl(30.0 2.9% 94% / 0.38) !important;
+}
+aside[data-testid="sidebar"] {
+  background: hsl(30.0 6.7% 5% / 0.72) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(1.15) !important;
+}
+html:not(.dark) aside[data-testid="sidebar"] {
+  background: hsl(30.0 2.9% 94% / 0.72) !important;
 }

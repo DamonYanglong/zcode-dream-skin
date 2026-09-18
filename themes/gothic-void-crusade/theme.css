@@ -117,18 +117,35 @@ html:not(.dark) ::-webkit-scrollbar-thumb:hover {
   background: rgba(116, 90, 40, 0.45) !important;
 }
 
-/* ---- 双态：首页图片裸露清晰，对话页 ambient 蒙层（对齐 Codex Dream Skin 首页策略）----
- * 钩子：.history-message 仅在对话页存在；首页无消息 → 主面板/顶栏透明，
- * 文字都在带 card 底的容器里，可读性由 card/popover/input 近实底保障。
+/* ---- 双态：首页图片裸露清晰，对话页 ambient 蒙层（对齐 Codex Dream Skin 层叠模型）----
+ * 实测（CDP computed style 审计）：ZCode 全窗口底色来自最外层容器的
+ * --color-background-alt（主区/输入区/侧栏自身均透明）；侧栏 aside 无独立底色。
+ * 因此：蒙层=background-alt；侧栏分离=直接给 aside 补半透明+毛玻璃。
  */
-html.dark:not(:has(.history-message)) {
-  --color-panel: transparent !important;
-  --color-header: transparent !important;
+/* 对话页（暗）：整体 ambient 深蒙层，消息直接排在蒙层上 */
+html.dark:has(.history-message) {
+  --color-background-alt: rgba(23, 21, 19, 0.78) !important;
 }
-/* 浅色首页：深字直接叠暗图不可读，保留轻蒙层折中（图仍清晰可见） */
+/* 首页（暗）：底色层全透，图片裸露 */
+html.dark:not(:has(.history-message)) {
+  --color-background-alt: transparent !important;
+}
+/* 对话页（浅）：暖白蒙层保可读 */
+html:not(.dark):has(.history-message) {
+  --color-background-alt: rgba(243, 234, 215, 0.72) !important;
+}
+/* 首页（浅）：轻蒙层（暗调背景图上保深字可读的最低限度） */
 html:not(.dark):not(:has(.history-message)) {
-  --color-panel: rgba(243, 234, 215, 0.5) !important;
-  --color-header: rgba(243, 234, 215, 0.5) !important;
+  --color-background-alt: rgba(243, 234, 215, 0.38) !important;
+}
+
+/* 侧栏：Codex 式半透明 + 毛玻璃，与主区底色解耦 */
+aside[data-testid="sidebar"] {
+  background: rgba(13, 13, 14, 0.72) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(1.15) !important;
+}
+html:not(.dark) aside[data-testid="sidebar"] {
+  background: rgba(243, 234, 215, 0.72) !important;
 }
 
 /* ---- 精修 ---- */
