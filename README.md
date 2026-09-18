@@ -64,3 +64,23 @@ themes/<id>/
 
 - [Fei-Away/Codex-Dream-Skin](https://github.com/Fei-Away/Codex-Dream-Skin) —— 工程范式与安全模型
 - Gothic Void Crusade 背景图由 [seansong-ideogram](https://github.com/seansong-ideogram) 创作（MIT）
+
+## 接入 Codex Dream Skin 主题市场
+
+你从 [DreamSkin.cc](https://dreamskin.cc) 市场装到本机 Codex 客户端的主题，都在
+`~/Library/Application Support/CodexDreamSkinStudio/themes/`。本项目可以直接消费它们：
+
+```bash
+node scripts/import-theme.mjs --list          # 列出可导入主题
+node scripts/import-theme.mjs --all           # 全部导入
+node scripts/import-theme.mjs --id preset-x   # 导入指定主题
+node scripts/import-theme.mjs --dir /path     # 导入任意 Codex 格式主题目录
+
+node scripts/apply.mjs --theme codex-preset-x # 切到导入的主题
+```
+
+配色策略：源主题带 `colors` 则映射；否则**从背景图自动取平均色推导**暗/亮两套变量
+（`sips` 1×1 采样，macOS 自带）。生成的 `theme.css` 头部带 `AUTO-GENERATED` 标记，可手调。
+
+> 版权注意：市场主题的素材权利各异（上游 NOTICE 明确列出受限素材）。导入的主题
+> 仅本地使用；不可再分发的素材已被 `.gitignore` 挡在仓库外，请勿强行提交。

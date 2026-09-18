@@ -1,0 +1,83 @@
+/*
+ * zcode-dream-skin · Gothic Void Crusade（AUTO-GENERATED —— 配色由背景图自动推导，可手调）
+ */
+html {
+  background-image: var(--zds-bg) !important;
+  background-size: cover !important;
+  background-position: 76% 45% !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
+}
+
+html.dark {
+  --color-background: transparent !important;
+  --color-background-alt: hsl(30.0 6.7% 12% / 0.88) !important;
+  --color-background-win-alt: hsl(30.0 6.7% 12% / 0.97) !important;
+  --color-header: hsl(30.0 5.7% 8% / 0.8) !important;
+  --color-panel: hsl(30.0 5.7% 9% / 0.82) !important;
+  --color-sidebar: hsl(30.0 6.7% 5% / 0.84) !important;
+  --color-card: hsl(30.0 6.7% 12% / 0.88) !important;
+  --color-card-selected: hsl(40.9 60.0% 62% / 0.16) !important;
+  --color-popover: hsl(30.0 6.7% 12% / 0.97) !important;
+  --color-popover-header: hsl(30.0 6.7% 12% / 0.97) !important;
+  --color-popover-foreground: #f3ead7 !important;
+  --color-input: hsl(30.0 5.7% 9% / 0.9) !important;
+  --color-input-focused: hsl(30.0 6.7% 12% / 0.97) !important;
+
+  --color-surface: hsl(40.9 60.0% 62% / 0.05) !important;
+  --color-surface-hover: hsl(40.9 60.0% 62% / 0.1) !important;
+  --color-hover: hsl(40.9 60.0% 62% / 0.1) !important;
+  --color-selected: hsl(40.9 60.0% 62% / 0.16) !important;
+
+  --color-brand: hsl(40.9 60.0% 62.0%) !important;
+  --color-accent: hsl(40.9 60.0% 62% / 0.14) !important;
+
+  --color-border: hsl(40.9 60.0% 62% / 0.24) !important;
+  --color-border-hover: hsl(40.9 60.0% 62% / 0.45) !important;
+
+  --color-foreground: #f3ead7 !important;
+  --color-foreground-subtle: #b5a386 !important;
+  --color-foreground-subtlest: hsl(30.0 1.7% 58.0%) !important;
+
+  --color-terminal-bg: hsl(30.0 5.7% 5% / 0.92) !important;
+  --color-terminal-selection: hsl(40.9 60.0% 62% / 0.16) !important;
+
+  --color-trajectory-user: hsl(40.9 60.0% 72.0%) !important;
+}
+
+html:not(.dark) {
+  --color-background: transparent !important;
+  --color-background-alt: hsl(30.0 2.9% 96% / 0.88) !important;
+  --color-background-win-alt: hsl(30.0 2.9% 96% / 0.97) !important;
+  --color-header: hsl(30.0 2.9% 94% / 0.78) !important;
+  --color-panel: hsl(30.0 2.9% 94% / 0.8) !important;
+  --color-sidebar: hsl(30.0 3.0% 92% / 0.86) !important;
+  --color-card: hsl(30.0 2.9% 96% / 0.88) !important;
+  --color-card-selected: hsl(40.9 60.0% 50% / 0.18) !important;
+  --color-popover: hsl(30.0 2.9% 96% / 0.97) !important;
+  --color-popover-header: hsl(30.0 2.9% 96% / 0.97) !important;
+  --color-popover-foreground: hsl(30.0 1.9% 14.0%) !important;
+  --color-input: hsl(30.0 2.9% 96% / 0.92) !important;
+  --color-input-focused: hsl(30.0 2.9% 96% / 0.97) !important;
+
+  --color-surface: hsl(30.0 4.8% 30% / 0.05) !important;
+  --color-surface-hover: hsl(30.0 4.8% 30% / 0.09) !important;
+  --color-hover: hsl(30.0 4.8% 30% / 0.09) !important;
+  --color-selected: hsl(40.9 60.0% 50% / 0.18) !important;
+
+  --color-brand: hsl(40.9 60.0% 38.0%) !important;
+  --color-accent: hsl(40.9 60.0% 50% / 0.18) !important;
+
+  --color-border: hsl(30.0 3.8% 25% / 0.25) !important;
+  --color-border-hover: hsl(30.0 3.8% 25% / 0.45) !important;
+
+  --color-foreground: hsl(30.0 1.9% 14.0%) !important;
+  --color-foreground-subtle: hsl(30.0 1.7% 36.0%) !important;
+  --color-foreground-subtlest: hsl(30.0 1.4% 52.0%) !important;
+
+  --color-terminal-bg: hsl(30.0 1.9% 94% / 0.95) !important;
+  --color-terminal-selection: hsl(40.9 60.0% 50% / 0.18) !important;
+
+  --color-trajectory-user: hsl(40.9 60.0% 38.0%) !important;
+}
+
