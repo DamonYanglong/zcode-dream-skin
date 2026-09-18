@@ -1,0 +1,86 @@
+/*
+ * zcode-dream-skin · Gothic Void Crusade
+ *
+ * 策略：ZCode（Tailwind v4 + .dark 语义变量体系）的全部底色都走
+ * --color-* 语义变量，因此换肤只需两步——
+ *   1) html 铺背景图（--zds-bg 由 apply.mjs 注入 data URI）
+ *   2) html.dark 覆盖语义变量为半透明深色，让背景透出
+ * 注入位置在官方样式表之后且带 !important，特异性高于原生 .dark 规则。
+ */
+
+/* ---- 背景层 ---- */
+html {
+  background-image: var(--zds-bg) !important;
+  background-size: cover !important;
+  background-position: 76% 45% !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
+}
+
+/* ---- 语义变量覆盖（暗色） ----
+ * 原值参考（app.asar styles-*.css .dark 块）：
+ *   --color-background / header / panel : neutral-900（不透明）
+ *   --color-sidebar                     : neutral-950（不透明）
+ *   --color-card / popover / input      : neutral-800（不透明）
+ */
+html.dark {
+  /* 页面/区域底色 → 半透明，露出背景 */
+  --color-background: transparent !important;
+  --color-header: rgba(23, 21, 19, 0.72) !important;
+  --color-panel: rgba(23, 21, 19, 0.72) !important;
+  --color-sidebar: rgba(13, 13, 14, 0.82) !important;
+  --color-background-alt: rgba(33, 29, 24, 0.55) !important;
+  --color-background-win-alt: rgba(23, 21, 19, 0.85) !important;
+
+  /* 卡片 / 弹层 / 输入区：近实底保证可读性 */
+  --color-card: rgba(33, 29, 24, 0.86) !important;
+  --color-card-selected: rgba(200, 165, 90, 0.14) !important;
+  --color-popover: rgba(33, 29, 24, 0.97) !important;
+  --color-popover-header: rgba(23, 21, 19, 0.97) !important;
+  --color-input: rgba(23, 21, 19, 0.9) !important;
+  --color-input-focused: rgba(23, 21, 19, 0.96) !important;
+
+  /* 交互面 */
+  --color-surface: rgba(200, 165, 90, 0.05) !important;
+  --color-surface-hover: rgba(200, 165, 90, 0.1) !important;
+  --color-hover: rgba(200, 165, 90, 0.1) !important;
+  --color-selected: rgba(200, 165, 90, 0.16) !important;
+
+  /* 品牌色 / 强调：天空蓝 → 哥特金 */
+  --color-brand: #c8a55a !important;
+  --color-accent: rgba(200, 165, 90, 0.14) !important;
+
+  /* 描线 */
+  --color-border: rgba(200, 165, 90, 0.24) !important;
+  --color-border-hover: rgba(200, 165, 90, 0.45) !important;
+
+  /* 文本（ZCode 原生 foreground 体系保持，仅微调暖调） */
+  --color-foreground-subtle: #b5a386 !important;
+  --color-foreground-subtlest: #8f8168 !important;
+
+  /* 终端区：压暗保持沉浸 */
+  --color-terminal-bg: rgba(13, 13, 14, 0.92) !important;
+  --color-terminal-selection: rgba(200, 165, 90, 0.26) !important;
+}
+
+/* ---- 精修 ---- */
+::selection {
+  background: rgba(200, 165, 90, 0.35) !important;
+  color: #f3ead7 !important;
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: rgba(200, 165, 90, 0.28) !important;
+}
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(200, 165, 90, 0.45) !important;
+}
+html.dark ::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+/* 会话轨迹色对齐金调（仅暗色） */
+html.dark {
+  --color-trajectory-user: #e3c27a !important;
+  --color-trajectory-tool-call: #c87a5a !important;
+}
