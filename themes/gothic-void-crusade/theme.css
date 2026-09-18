@@ -63,51 +63,62 @@ html.dark {
   --color-terminal-selection: rgba(200, 165, 90, 0.26) !important;
 }
 
-/* ---- 浅色模式强制压成主题暗色（换肤会话期间无论系统外观如何都呈现主题设计） ----
- * 浅色原值：--color-foreground = neutral-800（深字）、panel/card/input = #fff
- * 因此除底色外必须同时翻转前景文字，否则深底深字不可读。
+/* ---- 浅色模式变体（跟随 ZCode 明暗切换）----
+ * 同一张背景图；浅色下呈现暖白半透明面板 + 深暖棕文字，
+ * 金色强调压深一档（#96742e）保证浅底对比度。
  */
 html:not(.dark) {
   --color-background: transparent !important;
-  --color-background-alt: rgba(33, 29, 24, 0.55) !important;
-  --color-background-win-alt: rgba(23, 21, 19, 0.85) !important;
-  --color-header: rgba(23, 21, 19, 0.8) !important;
-  --color-panel: rgba(23, 21, 19, 0.82) !important;
-  --color-sidebar: rgba(13, 13, 14, 0.82) !important;
-  --color-card: rgba(33, 29, 24, 0.86) !important;
-  --color-card-selected: rgba(200, 165, 90, 0.14) !important;
-  --color-popover: rgba(33, 29, 24, 0.97) !important;
-  --color-popover-header: rgba(23, 21, 19, 0.97) !important;
-  --color-popover-foreground: #f3ead7 !important;
-  --color-input: rgba(23, 21, 19, 0.9) !important;
-  --color-input-focused: rgba(23, 21, 19, 0.96) !important;
+  --color-background-alt: rgba(248, 243, 230, 0.55) !important;
+  --color-background-win-alt: rgba(243, 234, 215, 0.85) !important;
+  --color-header: rgba(243, 234, 215, 0.78) !important;
+  --color-panel: rgba(243, 234, 215, 0.8) !important;
+  --color-sidebar: rgba(238, 231, 213, 0.86) !important;
+  --color-card: rgba(248, 243, 230, 0.88) !important;
+  --color-card-selected: rgba(200, 165, 90, 0.2) !important;
+  --color-popover: rgba(248, 243, 230, 0.97) !important;
+  --color-popover-header: rgba(243, 234, 215, 0.97) !important;
+  --color-popover-foreground: #2d2620 !important;
+  --color-input: rgba(248, 243, 230, 0.92) !important;
+  --color-input-focused: rgba(252, 248, 238, 0.96) !important;
 
-  --color-surface: rgba(200, 165, 90, 0.05) !important;
-  --color-surface-hover: rgba(200, 165, 90, 0.1) !important;
-  --color-hover: rgba(200, 165, 90, 0.1) !important;
-  --color-selected: rgba(200, 165, 90, 0.16) !important;
+  --color-surface: rgba(116, 53, 46, 0.05) !important;
+  --color-surface-hover: rgba(116, 53, 46, 0.09) !important;
+  --color-hover: rgba(116, 53, 46, 0.09) !important;
+  --color-selected: rgba(200, 165, 90, 0.18) !important;
 
-  --color-brand: #c8a55a !important;
-  --color-accent: rgba(200, 165, 90, 0.14) !important;
+  --color-brand: #96742e !important;
+  --color-accent: rgba(200, 165, 90, 0.18) !important;
 
-  --color-border: rgba(200, 165, 90, 0.24) !important;
-  --color-border-hover: rgba(200, 165, 90, 0.45) !important;
+  --color-border: rgba(116, 90, 40, 0.25) !important;
+  --color-border-hover: rgba(116, 90, 40, 0.45) !important;
 
-  /* 前景文字：深字 → 暖白（对齐暗色模式的可读性） */
-  --color-foreground: #f3ead7 !important;
-  --color-foreground-subtle: #b5a386 !important;
+  /* 前景文字：浅色变体用深暖棕 */
+  --color-foreground: #2d2620 !important;
+  --color-foreground-subtle: #6b5f4d !important;
   --color-foreground-subtlest: #8f8168 !important;
 
-  --color-terminal-bg: rgba(13, 13, 14, 0.92) !important;
-  --color-terminal-fg: #f3ead7 !important;
-  --color-terminal-selection: rgba(200, 165, 90, 0.26) !important;
+  --color-terminal-bg: rgba(240, 235, 222, 0.95) !important;
+  --color-terminal-selection: rgba(200, 165, 90, 0.3) !important;
 
-  --color-trajectory-user: #e3c27a !important;
-  --color-trajectory-tool-call: #c87a5a !important;
+  --color-trajectory-user: #96742e !important;
+  --color-trajectory-tool-call: #a04a35 !important;
+}
+
+/* 浅色下的选中与滚动条回归暗金系 */
+html:not(.dark) ::selection {
+  background: rgba(200, 165, 90, 0.35) !important;
+  color: #2d2620 !important;
+}
+html:not(.dark) ::-webkit-scrollbar-thumb {
+  background: rgba(116, 90, 40, 0.28) !important;
+}
+html:not(.dark) ::-webkit-scrollbar-thumb:hover {
+  background: rgba(116, 90, 40, 0.45) !important;
 }
 
 /* ---- 精修 ---- */
-::selection {
+html.dark ::selection {
   background: rgba(200, 165, 90, 0.35) !important;
   color: #f3ead7 !important;
 }
