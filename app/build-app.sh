@@ -57,11 +57,11 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 </plist>
 PLIST
 
-# engine 只取已提交内容（git archive 天然排除 .gitignore 的受限素材）：
-# 结构 Resources/engine/{scripts,themes}，README/LICENSE/NOTICE 放 Resources 根
+# engine 取「已跟踪文件的工作树版本」：git archive(HEAD) 会在未提交时打进旧脚本
+# （v1.0.3 踩过：二进制新、脚本旧）；git ls-files 同样天然排除 .gitignore 的受限素材
 ARCHIVE="$BUILD/archive"
-mkdir -p "$ARCHIVE"
-git -C "$REPO" archive HEAD | tar -x -C "$ARCHIVE"
+rm -rf "$ARCHIVE" && mkdir -p "$ARCHIVE"
+cd "$REPO" && git ls-files -z | rsync -a --files-from=- -- . "$ARCHIVE/" && cd "$REPO"
 mkdir -p "$APP/Contents/Resources/engine"
 mv "$ARCHIVE/scripts" "$APP/Contents/Resources/engine/scripts"
 mv "$ARCHIVE/themes" "$APP/Contents/Resources/engine/themes"
