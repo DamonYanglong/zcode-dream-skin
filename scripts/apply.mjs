@@ -134,6 +134,8 @@ const injectExpr = `(() => {
   if (!de.dataset.zdsOrigTheme) de.dataset.zdsOrigTheme = de.classList.contains("theme-zai-dark") ? "theme-zai-dark" : "theme-zai-light";
   de.classList.remove("theme-zai-light", "theme-zai-dark");
   de.classList.add("theme-zai-light");` : ""}
+  ${!forceDark && !forceLight ? `if (de.dataset.zdsOrigTheme) { de.classList.remove("theme-zai-light", "theme-zai-dark"); de.classList.add(de.dataset.zdsOrigTheme); delete de.dataset.zdsOrigTheme; }
+  if (de.dataset.zdsForcedDark) { de.classList.remove("dark"); delete de.dataset.zdsForcedDark; }` : ""}
   return "applied";
 })()`;
 
