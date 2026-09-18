@@ -2,7 +2,7 @@
   "schema": "zcode-dream-skin-theme/1",
   "id": "gothic-void-crusade",
   "name": "Gothic Void Crusade",
-  "appearance": "adaptive",
+  "appearance": "dark",
   "image": "background.jpg",
   "art": {
     "focusX": 0.76,

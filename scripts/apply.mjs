@@ -108,7 +108,11 @@ function runCdp(wsUrl, commands) {
   });
 }
 
-/** 注入页面的 JS：幂等——先清旧标记/样式，再挂新样式 */
+/** 注入页面的 JS：幂等——先清旧标记/样式，再挂新样式。
+ * appearance=dark/light 的主题会强制对应外壳（对齐 Codex：暗图配暗壳），
+ * auto 则跟随 ZCode 自身明暗。 */
+const forceDark = theme.appearance === "dark";
+const forceLight = theme.appearance === "light";
 const injectExpr = `(() => {
   const de = document.documentElement;
   de.removeAttribute("data-zds-theme");
@@ -122,6 +126,8 @@ const injectExpr = `(() => {
   s2.textContent = ${JSON.stringify(themeCss)};
   document.head.append(s1, s2);
   de.setAttribute("data-zds-theme", ${JSON.stringify(THEME)});
+  ${forceDark ? 'if (!de.classList.contains("dark")) { de.classList.add("dark"); de.dataset.zdsForcedDark = "1"; }' : ""}
+  ${forceLight ? 'if (de.classList.contains("dark")) { de.classList.remove("dark"); de.dataset.zdsForcedLight = "1"; }' : ""}
   return "applied";
 })()`;
 
@@ -131,9 +137,7 @@ const verifyExpr = `(() => ({
   themeStyle: !!document.getElementById(${JSON.stringify(STYLE_THEME_ID)}),
   dark: document.documentElement.classList.contains("dark"),
   title: document.title,
-}))()`;
-
-const evalCmd = (expr) => ({
+}))()`;const evalCmd = (expr) => ({
   method: "Runtime.evaluate",
   params: { expression: expr, returnByValue: true, awaitPromise: true },
 });

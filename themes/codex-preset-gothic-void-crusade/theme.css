@@ -1,21 +1,59 @@
 /*
  * zcode-dream-skin · Gothic Void Crusade（AUTO-GENERATED —— 配色由背景图自动推导，可手调）
+ * 方向渐变 scrim（对齐 Codex Dream Skin）：首页左重右透，对话页顶部清、底部实。
  */
 html {
-  background-image: var(--zds-bg) !important;
-  background-size: cover !important;
-  background-position: 76% 45% !important;
+  background-size: auto, auto, cover !important;
+  background-position: center, center, 76% 45% !important;
   background-repeat: no-repeat !important;
 }
-/* 浅色仿 Codex 手法：背景图先叠暖白蒙层提亮雾化，控件再半透明衔接 */
-html:not(.dark) {
-  background-image: linear-gradient(hsl(30.0 2.9% 94% / 0.42), hsl(30.0 2.9% 94% / 0.42)), var(--zds-bg) !important;
+
+html.dark:not(:has(.history-message)) {
+  background-image:
+    linear-gradient(90deg, hsl(30.0 5.7% 5% / .90) 0%, hsl(30.0 5.7% 5% / .76) 50%, hsl(30.0 5.7% 5% / .18) 84%, transparent 100%),
+    linear-gradient(transparent, transparent),
+    var(--zds-bg) !important;
+  --color-background-alt: transparent !important;
+}
+html.dark:has(.history-message) {
+  background-image:
+    linear-gradient(180deg, hsl(30.0 5.7% 5% / .10) 0%, hsl(30.0 5.7% 5% / .18) 32%, hsl(30.0 5.7% 5% / .76) 68%, hsl(30.0 5.7% 5% / 1) 100%),
+    linear-gradient(90deg, hsl(30.0 5.7% 5% / .56) 0%, hsl(30.0 5.7% 5% / .36) 48%, hsl(30.0 5.7% 5% / .12) 100%),
+    var(--zds-bg) !important;
+  --color-background-alt: transparent !important;
+}
+html:not(.dark):not(:has(.history-message)) {
+  background-image:
+    linear-gradient(90deg, hsl(30.0 2.9% 94% / .96) 0%, hsl(30.0 2.9% 94% / .82) 50%, hsl(30.0 2.9% 94% / .20) 84%, transparent 100%),
+    linear-gradient(transparent, transparent),
+    var(--zds-bg) !important;
+  --color-background-alt: transparent !important;
+}
+html:not(.dark):has(.history-message) {
+  background-image:
+    linear-gradient(180deg, hsl(30.0 2.9% 94% / .08) 0%, hsl(30.0 2.9% 94% / .22) 34%, hsl(30.0 2.9% 94% / .78) 70%, hsl(30.0 2.9% 94% / 1) 100%),
+    linear-gradient(90deg, hsl(30.0 2.9% 94% / .68) 0%, hsl(30.0 2.9% 94% / .40) 48%, hsl(30.0 2.9% 94% / .12) 100%),
+    var(--zds-bg) !important;
+  --color-background-alt: transparent !important;
+}
+
+aside[data-testid="sidebar"] {
+  background: hsl(30.0 6.7% 5% / .46) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(1.15) !important;
+}
+html.dark:has(.history-message) aside[data-testid="sidebar"] {
+  background: hsl(30.0 6.7% 5% / .70) !important;
+}
+html:not(.dark) aside[data-testid="sidebar"] {
+  background: hsl(30.0 2.9% 94% / .48) !important;
+}
+html:not(.dark):has(.history-message) aside[data-testid="sidebar"] {
+  background: hsl(30.0 2.9% 94% / .72) !important;
 }
 
 html.dark {
   --color-background: transparent !important;
-  --color-background-alt: hsl(30.0 6.7% 12% / 0.88) !important;
-  --color-background-win-alt: hsl(30.0 6.7% 12% / 0.97) !important;
+  --color-background-win-alt: transparent !important;
   --color-header: hsl(30.0 5.7% 8% / 0.8) !important;
   --color-panel: hsl(30.0 5.7% 9% / 0.82) !important;
   --color-sidebar: hsl(30.0 6.7% 5% / 0.84) !important;
@@ -50,8 +88,7 @@ html.dark {
 
 html:not(.dark) {
   --color-background: transparent !important;
-  --color-background-alt: hsl(30.0 2.9% 96% / 0.88) !important;
-  --color-background-win-alt: hsl(30.0 2.9% 96% / 0.97) !important;
+  --color-background-win-alt: transparent !important;
   --color-header: hsl(30.0 2.9% 94% / 0.78) !important;
   --color-panel: hsl(30.0 2.9% 94% / 0.8) !important;
   --color-sidebar: hsl(30.0 3.0% 92% / 0.86) !important;
@@ -84,23 +121,3 @@ html:not(.dark) {
   --color-trajectory-user: hsl(40.9 60.0% 38.0%) !important;
 }
 
-/* 双态：实测 ZCode 全窗口底色来自最外层 --color-background-alt；侧栏 aside 无独立底色 */
-html.dark:has(.history-message) {
-  --color-background-alt: hsl(30.0 5.7% 9% / 0.78) !important;
-}
-html.dark:not(:has(.history-message)) {
-  --color-background-alt: transparent !important;
-}
-html:not(.dark):has(.history-message) {
-  --color-background-alt: hsl(30.0 2.9% 94% / 0.45) !important;
-}
-html:not(.dark):not(:has(.history-message)) {
-  --color-background-alt: transparent !important;
-}
-aside[data-testid="sidebar"] {
-  background: hsl(30.0 6.7% 5% / 0.72) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(1.15) !important;
-}
-html:not(.dark) aside[data-testid="sidebar"] {
-  background: hsl(30.0 2.9% 94% / 0.72) !important;
-}

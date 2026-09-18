@@ -120,6 +120,7 @@ function derivePalettes(srcColors, avgRgb) {
     trajUser: hslCss([aHue, aSat, 0.72]),
     dialogVeil: panel_(sat(0.6), 9, 0.78),
     sidebarBg: panel_(sat(0.7), 5, 0.72),
+    baseTone: `${H(h)} ${(sat(0.6) * 100).toFixed(1)}% 5%`,
   };
 
   const light = {
@@ -145,6 +146,7 @@ function derivePalettes(srcColors, avgRgb) {
     bgVeil: panel_(sat(0.3), 94, 0.42),
     dialogVeil: panel_(sat(0.3), 94, 0.45),
     sidebarBg: panel_(sat(0.3), 94, 0.72),
+    baseTone: `${H(h)} ${(sat(0.3) * 100).toFixed(1)}% 94%`,
   };
   return { dark, light };
 }
@@ -161,8 +163,7 @@ function themeCssBlock(selector, p, focus) {
   const v = (name) => normalize(p[name]);
   return `html${selector} {
   --color-background: transparent !important;
-  --color-background-alt: ${v("card")} !important;
-  --color-background-win-alt: ${v("popover")} !important;
+  --color-background-win-alt: transparent !important;
   --color-header: ${v("header")} !important;
   --color-panel: ${v("panel")} !important;
   --color-sidebar: ${v("sidebar")} !important;
@@ -199,43 +200,65 @@ function themeCssBlock(selector, p, focus) {
 
 function generateThemeCss(palettes, focus, themeName) {
   const pos = `${Math.round((focus?.focusX ?? 0.7) * 100)}% ${Math.round((focus?.focusY ?? 0.5) * 100)}%`;
-  const veil = normalize(palettes.light.bgVeil);
+  const D = (a) => `hsl(${palettes.dark.baseTone} / ${a})`;
+  const L = (a) => `hsl(${palettes.light.baseTone} / ${a})`;
+  const panelD = palettes.dark.sidebarBg.split(" / ")[0];
+  const panelL = palettes.light.sidebarBg.split(" / ")[0];
   return `/*
  * zcode-dream-skin · ${themeName}（AUTO-GENERATED —— 配色由背景图自动推导，可手调）
+ * 方向渐变 scrim（对齐 Codex Dream Skin）：首页左重右透，对话页顶部清、底部实。
  */
 html {
-  background-image: var(--zds-bg) !important;
-  background-size: cover !important;
-  background-position: ${pos} !important;
+  background-size: auto, auto, cover !important;
+  background-position: center, center, ${pos} !important;
   background-repeat: no-repeat !important;
 }
-/* 浅色仿 Codex 手法：背景图先叠暖白蒙层提亮雾化，控件再半透明衔接 */
-html:not(.dark) {
-  background-image: linear-gradient(${veil}, ${veil}), var(--zds-bg) !important;
+
+html.dark:not(:has(.history-message)) {
+  background-image:
+    linear-gradient(90deg, ${D(".90")} 0%, ${D(".76")} 50%, ${D(".18")} 84%, transparent 100%),
+    linear-gradient(transparent, transparent),
+    var(--zds-bg) !important;
+  --color-background-alt: transparent !important;
+}
+html.dark:has(.history-message) {
+  background-image:
+    linear-gradient(180deg, ${D(".10")} 0%, ${D(".18")} 32%, ${D(".76")} 68%, ${D("1")} 100%),
+    linear-gradient(90deg, ${D(".56")} 0%, ${D(".36")} 48%, ${D(".12")} 100%),
+    var(--zds-bg) !important;
+  --color-background-alt: transparent !important;
+}
+html:not(.dark):not(:has(.history-message)) {
+  background-image:
+    linear-gradient(90deg, ${L(".96")} 0%, ${L(".82")} 50%, ${L(".20")} 84%, transparent 100%),
+    linear-gradient(transparent, transparent),
+    var(--zds-bg) !important;
+  --color-background-alt: transparent !important;
+}
+html:not(.dark):has(.history-message) {
+  background-image:
+    linear-gradient(180deg, ${L(".08")} 0%, ${L(".22")} 34%, ${L(".78")} 70%, ${L("1")} 100%),
+    linear-gradient(90deg, ${L(".68")} 0%, ${L(".40")} 48%, ${L(".12")} 100%),
+    var(--zds-bg) !important;
+  --color-background-alt: transparent !important;
+}
+
+aside[data-testid="sidebar"] {
+  background: hsl(${panelD} / .46) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(1.15) !important;
+}
+html.dark:has(.history-message) aside[data-testid="sidebar"] {
+  background: hsl(${panelD} / .70) !important;
+}
+html:not(.dark) aside[data-testid="sidebar"] {
+  background: hsl(${panelL} / .48) !important;
+}
+html:not(.dark):has(.history-message) aside[data-testid="sidebar"] {
+  background: hsl(${panelL} / .72) !important;
 }
 
 ${themeCssBlock(".dark", palettes.dark, focus)}
 ${themeCssBlock(":not(.dark)", palettes.light, focus)}
-/* 双态：实测 ZCode 全窗口底色来自最外层 --color-background-alt；侧栏 aside 无独立底色 */
-html.dark:has(.history-message) {
-  --color-background-alt: ${normalize(palettes.dark.dialogVeil)} !important;
-}
-html.dark:not(:has(.history-message)) {
-  --color-background-alt: transparent !important;
-}
-html:not(.dark):has(.history-message) {
-  --color-background-alt: ${normalize(palettes.light.dialogVeil)} !important;
-}
-html:not(.dark):not(:has(.history-message)) {
-  --color-background-alt: transparent !important;
-}
-aside[data-testid="sidebar"] {
-  background: ${normalize(palettes.dark.sidebarBg)} !important;
-  -webkit-backdrop-filter: blur(24px) saturate(1.15) !important;
-}
-html:not(.dark) aside[data-testid="sidebar"] {
-  background: ${normalize(palettes.light.sidebarBg)} !important;
-}
 `;
 }
 

@@ -1,40 +1,65 @@
 /*
  * zcode-dream-skin · Gothic Void Crusade
  *
- * 策略：ZCode（Tailwind v4 + .dark 语义变量体系）的全部底色都走
- * --color-* 语义变量，因此换肤只需两步——
- *   1) html 铺背景图（--zds-bg 由 apply.mjs 注入 data URI）
- *   2) html.dark 覆盖语义变量为半透明深色，让背景透出
- * 注入位置在官方样式表之后且带 !important，特异性高于原生 .dark 规则。
+ * 层叠模型完全对齐 Codex Dream Skin 的 dream-skin.css：
+ * 用「方向渐变 scrim」而非均匀蒙层——均匀 veil 会把整图统一压暗（蒙层感），
+ * 渐变则把重处放在文字区、让焦点图区接近裸露。
+ *   首页  hero-scrim   水平：.90 → .76(50%) → .18(84%) → transparent（图区裸露）
+ *   对话  task-shade   水平：.56 → .36(48%) → .12（文字列轻罩）
+ *         task-fade    垂直：顶部 .10（图清晰）→ 底部 1.0（输入区实底）
+ *   侧栏  独立半透明 + 毛玻璃：首页 .46 / 对话 .70
+ * 数值取自上游 dark / light 两组 token，仅替换成本主题的底色 RGB。
  */
 
-/* ---- 背景层 ----
- * 浅色模式仿 Codex 手法：暗图先叠暖白蒙层整体提亮雾化，控件再半透明衔接，
- * 避免实底白块在暗图上像补丁。暗色模式暗图原生协调，不加蒙层。
- */
+/* ---- 基础画布（三层：渐变1, 渐变2, 艺术图；各状态块都声明满 3 层）---- */
 html {
-  background-image: var(--zds-bg) !important;
-  background-size: cover !important;
-  background-position: 76% 45% !important;
+  background-size: auto, auto, cover !important;
+  background-position: center, center, 76% 45% !important;
   background-repeat: no-repeat !important;
 }
 
-/* ---- 语义变量覆盖（暗色） ----
- * 原值参考（app.asar styles-*.css .dark 块）：
- *   --color-background / header / panel : neutral-900（不透明）
- *   --color-sidebar                     : neutral-950（不透明）
- *   --color-card / popover / input      : neutral-800（不透明）
- */
-html.dark {
-  /* 页面/区域底色 → 半透明，露出背景 */
-  --color-background: transparent !important;
-  --color-header: rgba(23, 21, 19, 0.8) !important;
-  --color-panel: rgba(23, 21, 19, 0.82) !important;
-  --color-sidebar: rgba(13, 13, 14, 0.82) !important;
-  --color-background-alt: rgba(33, 29, 24, 0.55) !important;
-  --color-background-win-alt: rgba(23, 21, 19, 0.85) !important;
+/* ---- 首页（暗）：hero scrim，左重右透 ---- */
+html.dark:not(:has(.history-message)) {
+  background-image:
+    linear-gradient(90deg, rgb(13 13 14 / .90) 0%, rgb(13 13 14 / .76) 50%, rgb(13 13 14 / .18) 84%, transparent 100%),
+    linear-gradient(transparent, transparent),
+    var(--zds-bg) !important;
+  --color-background-alt: transparent !important;
+}
 
-  /* 卡片 / 弹层 / 输入区：近实底保证可读性 */
+/* ---- 对话页（暗）：task-fade + task-shade ---- */
+html.dark:has(.history-message) {
+  background-image:
+    linear-gradient(180deg, rgb(13 13 14 / .10) 0%, rgb(13 13 14 / .18) 32%, rgb(13 13 14 / .76) 68%, rgb(13 13 14 / 1) 100%),
+    linear-gradient(90deg, rgb(13 13 14 / .56) 0%, rgb(13 13 14 / .36) 48%, rgb(13 13 14 / .12) 100%),
+    var(--zds-bg) !important;
+  --color-background-alt: transparent !important;
+}
+
+/* ---- 首页（浅）：panel 色 hero scrim ---- */
+html:not(.dark):not(:has(.history-message)) {
+  background-image:
+    linear-gradient(90deg, rgb(248 243 230 / .96) 0%, rgb(248 243 230 / .82) 50%, rgb(248 243 230 / .20) 84%, transparent 100%),
+    linear-gradient(transparent, transparent),
+    var(--zds-bg) !important;
+  --color-background-alt: transparent !important;
+}
+
+/* ---- 对话页（浅）：light 组 task-fade + task-shade ---- */
+html:not(.dark):has(.history-message) {
+  background-image:
+    linear-gradient(180deg, rgb(248 243 230 / .08) 0%, rgb(248 243 230 / .22) 34%, rgb(248 243 230 / .78) 70%, rgb(248 243 230 / 1) 100%),
+    linear-gradient(90deg, rgb(248 243 230 / .68) 0%, rgb(248 243 230 / .40) 48%, rgb(248 243 230 / .12) 100%),
+    var(--zds-bg) !important;
+  --color-background-alt: transparent !important;
+}
+
+/* ---- 语义变量覆盖（暗色）：组件近实底保证控件内可读 ---- */
+html.dark {
+  /* 盖在画布上的容器全部放行（审计确认主区容器用这两个变量铺底） */
+  --color-background: transparent !important;
+  --color-background-win-alt: transparent !important;
+
   --color-card: rgba(33, 29, 24, 0.86) !important;
   --color-card-selected: rgba(200, 165, 90, 0.14) !important;
   --color-popover: rgba(33, 29, 24, 0.97) !important;
@@ -42,41 +67,32 @@ html.dark {
   --color-input: rgba(23, 21, 19, 0.9) !important;
   --color-input-focused: rgba(23, 21, 19, 0.96) !important;
 
-  /* 交互面 */
-  --color-surface: rgba(200, 165, 90, 0.05) !important;
-  --color-surface-hover: rgba(200, 165, 90, 0.1) !important;
+  --color-surface: rgba(23, 21, 19, 0.55) !important;
+  --color-surface-hover: rgba(23, 21, 19, 0.7) !important;
   --color-hover: rgba(200, 165, 90, 0.1) !important;
   --color-selected: rgba(200, 165, 90, 0.16) !important;
 
-  /* 品牌色 / 强调：天空蓝 → 哥特金 */
   --color-brand: #c8a55a !important;
   --color-accent: rgba(200, 165, 90, 0.14) !important;
 
-  /* 描线 */
   --color-border: rgba(200, 165, 90, 0.24) !important;
   --color-border-hover: rgba(200, 165, 90, 0.45) !important;
 
-  /* 文本（ZCode 原生 foreground 体系保持，仅微调暖调） */
   --color-foreground-subtle: #b5a386 !important;
   --color-foreground-subtlest: #8f8168 !important;
 
-  /* 终端区：压暗保持沉浸 */
   --color-terminal-bg: rgba(13, 13, 14, 0.92) !important;
   --color-terminal-selection: rgba(200, 165, 90, 0.26) !important;
+
+  --color-trajectory-user: #e3c27a !important;
+  --color-trajectory-tool-call: #c87a5a !important;
 }
 
-/* ---- 浅色模式变体（跟随 ZCode 明暗切换）----
- * 同一张背景图；浅色下呈现暖白半透明面板 + 深暖棕文字，
- * 金色强调压深一档（#96742e）保证浅底对比度。
- */
+/* ---- 语义变量覆盖（浅色）：控件半透明，与雾化背景衔接 ---- */
 html:not(.dark) {
-  background-image: linear-gradient(rgba(243, 234, 215, 0.42), rgba(243, 234, 215, 0.42)), var(--zds-bg) !important;
   --color-background: transparent !important;
-  --color-background-alt: rgba(248, 243, 230, 0.55) !important;
-  --color-background-win-alt: rgba(243, 234, 215, 0.85) !important;
-  --color-header: rgba(243, 234, 215, 0.78) !important;
-  --color-panel: rgba(243, 234, 215, 0.8) !important;
-  --color-sidebar: rgba(238, 231, 213, 0.86) !important;
+  --color-background-win-alt: transparent !important;
+
   --color-card: rgba(248, 243, 230, 0.66) !important;
   --color-card-selected: rgba(200, 165, 90, 0.2) !important;
   --color-popover: rgba(248, 243, 230, 0.9) !important;
@@ -96,7 +112,6 @@ html:not(.dark) {
   --color-border: rgba(116, 90, 40, 0.25) !important;
   --color-border-hover: rgba(116, 90, 40, 0.45) !important;
 
-  /* 前景文字：浅色变体用深暖棕 */
   --color-foreground: #2d2620 !important;
   --color-foreground-subtle: #6b5f4d !important;
   --color-foreground-subtlest: #8f8168 !important;
@@ -108,55 +123,34 @@ html:not(.dark) {
   --color-trajectory-tool-call: #a04a35 !important;
 }
 
-/* 浅色下的选中与滚动条回归暗金系 */
-html:not(.dark) ::selection {
-  background: rgba(200, 165, 90, 0.35) !important;
-  color: #2d2620 !important;
-}
-html:not(.dark) ::-webkit-scrollbar-thumb {
-  background: rgba(116, 90, 40, 0.28) !important;
-}
-html:not(.dark) ::-webkit-scrollbar-thumb:hover {
-  background: rgba(116, 90, 40, 0.45) !important;
-}
-
-/* ---- 双态：首页图片裸露清晰，对话页 ambient 蒙层（对齐 Codex Dream Skin 层叠模型）----
- * 实测（CDP computed style 审计）：ZCode 全窗口底色来自最外层容器的
- * --color-background-alt（主区/输入区/侧栏自身均透明）；侧栏 aside 无独立底色。
- * 因此：蒙层=background-alt；侧栏分离=直接给 aside 补半透明+毛玻璃。
- */
-/* 对话页（暗）：整体 ambient 深蒙层，消息直接排在蒙层上 */
-html.dark:has(.history-message) {
-  --color-background-alt: rgba(23, 21, 19, 0.78) !important;
-}
-/* 首页（暗）：底色层全透，图片裸露 */
-html.dark:not(:has(.history-message)) {
-  --color-background-alt: transparent !important;
-}
-/* 对话页（浅）：暖白蒙层保可读（0.45：与背景 0.42 亮化层复合后图片透出 ~32%，对齐 Codex 观感） */
-html:not(.dark):has(.history-message) {
-  --color-background-alt: rgba(243, 234, 215, 0.45) !important;
-}
-/* 首页（浅）：不再叠第二层蒙层——背景图自带 0.42 雾化，图片清晰优先 */
-html:not(.dark):not(:has(.history-message)) {
-  --color-background-alt: transparent !important;
-}
-
-/* 侧栏：Codex 式半透明 + 毛玻璃，与主区底色解耦 */
+/* ---- 侧栏：Codex 式独立底（首页 .46 / 对话 .70）+ 毛玻璃 ---- */
 aside[data-testid="sidebar"] {
-  background: rgba(13, 13, 14, 0.72) !important;
+  background: rgb(23 21 19 / .46) !important;
   -webkit-backdrop-filter: blur(24px) saturate(1.15) !important;
 }
+html.dark:has(.history-message) aside[data-testid="sidebar"] {
+  background: rgb(23 21 19 / .70) !important;
+}
 html:not(.dark) aside[data-testid="sidebar"] {
-  background: rgba(243, 234, 215, 0.72) !important;
+  background: rgb(248 243 230 / .48) !important;
+}
+html:not(.dark):has(.history-message) aside[data-testid="sidebar"] {
+  background: rgb(248 243 230 / .72) !important;
 }
 
 /* ---- 精修 ---- */
+/* 首页欢迎标题等：强制前景色，防止落在渐变亮区时对比不足 */
+h1, h2 {
+  color: var(--color-foreground) !important;
+}
 html.dark ::selection {
   background: rgba(200, 165, 90, 0.35) !important;
   color: #f3ead7 !important;
 }
-
+html:not(.dark) ::selection {
+  background: rgba(200, 165, 90, 0.35) !important;
+  color: #2d2620 !important;
+}
 html.dark ::-webkit-scrollbar-thumb {
   background: rgba(200, 165, 90, 0.28) !important;
 }
@@ -166,9 +160,9 @@ html.dark ::-webkit-scrollbar-thumb:hover {
 html.dark ::-webkit-scrollbar-track {
   background: transparent !important;
 }
-
-/* 会话轨迹色对齐金调（仅暗色） */
-html.dark {
-  --color-trajectory-user: #e3c27a !important;
-  --color-trajectory-tool-call: #c87a5a !important;
+html:not(.dark) ::-webkit-scrollbar-thumb {
+  background: rgba(116, 90, 40, 0.28) !important;
+}
+html:not(.dark) ::-webkit-scrollbar-thumb:hover {
+  background: rgba(116, 90, 40, 0.45) !important;
 }
