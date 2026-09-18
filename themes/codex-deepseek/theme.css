@@ -1,0 +1,123 @@
+/*
+ * zcode-dream-skin · DeepSeek-鲸鱼娘（AUTO-GENERATED —— 配色由背景图自动推导，可手调）
+ * 方向渐变 scrim（对齐 Codex Dream Skin）：首页左重右透，对话页顶部清、底部实。
+ */
+html {
+  background-size: auto, auto, cover !important;
+  background-position: center, center, 50% 50% !important;
+  background-repeat: no-repeat !important;
+}
+
+html.dark:not(:has(.history-message)) {
+  background-image:
+    linear-gradient(90deg, hsl(225.0 16.4% 5% / .90) 0%, hsl(225.0 16.4% 5% / .76) 50%, hsl(225.0 16.4% 5% / .18) 84%, transparent 100%),
+    linear-gradient(transparent, transparent),
+    var(--zds-bg) !important;
+  --color-background-alt: transparent !important;
+}
+html.dark:has(.history-message) {
+  background-image:
+    linear-gradient(180deg, hsl(225.0 16.4% 5% / .10) 0%, hsl(225.0 16.4% 5% / .18) 32%, hsl(225.0 16.4% 5% / .76) 68%, hsl(225.0 16.4% 5% / 1) 100%),
+    linear-gradient(90deg, hsl(225.0 16.4% 5% / .56) 0%, hsl(225.0 16.4% 5% / .36) 48%, hsl(225.0 16.4% 5% / .12) 100%),
+    var(--zds-bg) !important;
+  --color-background-alt: transparent !important;
+}
+html:not(.dark):not(:has(.history-message)) {
+  background-image:
+    linear-gradient(90deg, hsl(225.0 8.2% 94% / .96) 0%, hsl(225.0 8.2% 94% / .82) 50%, hsl(225.0 8.2% 94% / .20) 84%, transparent 100%),
+    linear-gradient(transparent, transparent),
+    var(--zds-bg) !important;
+  --color-background-alt: transparent !important;
+}
+html:not(.dark):has(.history-message) {
+  background-image:
+    linear-gradient(180deg, hsl(225.0 8.2% 94% / .08) 0%, hsl(225.0 8.2% 94% / .22) 34%, hsl(225.0 8.2% 94% / .78) 70%, hsl(225.0 8.2% 94% / 1) 100%),
+    linear-gradient(90deg, hsl(225.0 8.2% 94% / .68) 0%, hsl(225.0 8.2% 94% / .40) 48%, hsl(225.0 8.2% 94% / .12) 100%),
+    var(--zds-bg) !important;
+  --color-background-alt: transparent !important;
+}
+
+aside[data-testid="sidebar"] {
+  background: hsl(225.0 19.1% 5% / .46) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(1.15) !important;
+}
+html.dark:has(.history-message) aside[data-testid="sidebar"] {
+  background: hsl(225.0 19.1% 5% / .70) !important;
+}
+html:not(.dark) aside[data-testid="sidebar"] {
+  background: hsl(225.0 8.2% 94% / .48) !important;
+}
+html:not(.dark):has(.history-message) aside[data-testid="sidebar"] {
+  background: hsl(225.0 8.2% 94% / .72) !important;
+}
+
+html.dark {
+  --color-background: transparent !important;
+  --color-background-win-alt: transparent !important;
+  --color-header: hsl(225.0 16.4% 8% / 0.8) !important;
+  --color-panel: hsl(225.0 16.4% 9% / 0.82) !important;
+  --color-sidebar: hsl(225.0 19.1% 5% / 0.84) !important;
+  --color-card: hsl(225.0 19.1% 12% / 0.88) !important;
+  --color-card-selected: hsl(27.4 59.7% 62% / 0.16) !important;
+  --color-popover: hsl(225.0 19.1% 12% / 0.97) !important;
+  --color-popover-header: hsl(225.0 19.1% 12% / 0.97) !important;
+  --color-popover-foreground: #352970 !important;
+  --color-input: hsl(225.0 16.4% 9% / 0.9) !important;
+  --color-input-focused: hsl(225.0 19.1% 12% / 0.97) !important;
+
+  --color-surface: hsl(27.4 59.7% 62% / 0.05) !important;
+  --color-surface-hover: hsl(27.4 59.7% 62% / 0.1) !important;
+  --color-hover: hsl(27.4 59.7% 62% / 0.1) !important;
+  --color-selected: hsl(27.4 59.7% 62% / 0.16) !important;
+
+  --color-brand: hsl(27.4 59.7% 62.0%) !important;
+  --color-accent: hsl(27.4 59.7% 62% / 0.14) !important;
+
+  --color-border: hsl(27.4 59.7% 62% / 0.24) !important;
+  --color-border-hover: hsl(27.4 59.7% 62% / 0.45) !important;
+
+  --color-foreground: #352970 !important;
+  --color-foreground-subtle: #030303 !important;
+  --color-foreground-subtlest: hsl(225.0 4.9% 58.0%) !important;
+
+  --color-terminal-bg: hsl(225.0 16.4% 5% / 0.92) !important;
+  --color-terminal-selection: hsl(27.4 59.7% 62% / 0.16) !important;
+
+  --color-trajectory-user: hsl(27.4 59.7% 72.0%) !important;
+}
+
+html:not(.dark) {
+  --color-background: transparent !important;
+  --color-background-win-alt: transparent !important;
+  --color-header: hsl(225.0 8.2% 94% / 0.78) !important;
+  --color-panel: hsl(225.0 8.2% 94% / 0.8) !important;
+  --color-sidebar: hsl(225.0 8.7% 92% / 0.86) !important;
+  --color-card: hsl(225.0 8.2% 96% / 0.88) !important;
+  --color-card-selected: hsl(27.4 59.7% 50% / 0.18) !important;
+  --color-popover: hsl(225.0 8.2% 96% / 0.97) !important;
+  --color-popover-header: hsl(225.0 8.2% 96% / 0.97) !important;
+  --color-popover-foreground: hsl(225.0 5.5% 14.0%) !important;
+  --color-input: hsl(225.0 8.2% 96% / 0.92) !important;
+  --color-input-focused: hsl(225.0 8.2% 96% / 0.97) !important;
+
+  --color-surface: hsl(225.0 13.6% 30% / 0.05) !important;
+  --color-surface-hover: hsl(225.0 13.6% 30% / 0.09) !important;
+  --color-hover: hsl(225.0 13.6% 30% / 0.09) !important;
+  --color-selected: hsl(27.4 59.7% 50% / 0.18) !important;
+
+  --color-brand: hsl(27.4 59.7% 38.0%) !important;
+  --color-accent: hsl(27.4 59.7% 50% / 0.18) !important;
+
+  --color-border: hsl(225.0 10.9% 25% / 0.25) !important;
+  --color-border-hover: hsl(225.0 10.9% 25% / 0.45) !important;
+
+  --color-foreground: hsl(225.0 5.5% 14.0%) !important;
+  --color-foreground-subtle: hsl(225.0 4.9% 36.0%) !important;
+  --color-foreground-subtlest: hsl(225.0 4.1% 52.0%) !important;
+
+  --color-terminal-bg: hsl(225.0 5.5% 94% / 0.95) !important;
+  --color-terminal-selection: hsl(27.4 59.7% 50% / 0.18) !important;
+
+  --color-trajectory-user: hsl(27.4 59.7% 38.0%) !important;
+}
+
