@@ -133,9 +133,9 @@ html.dark:has(.history-message) {
 html.dark:not(:has(.history-message)) {
   --color-background-alt: transparent !important;
 }
-/* 对话页（浅）：暖白蒙层保可读 */
+/* 对话页（浅）：暖白蒙层保可读（0.45：与背景 0.42 亮化层复合后图片透出 ~32%，对齐 Codex 观感） */
 html:not(.dark):has(.history-message) {
-  --color-background-alt: rgba(243, 234, 215, 0.72) !important;
+  --color-background-alt: rgba(243, 234, 215, 0.45) !important;
 }
 /* 首页（浅）：不再叠第二层蒙层——背景图自带 0.42 雾化，图片清晰优先 */
 html:not(.dark):not(:has(.history-message)) {

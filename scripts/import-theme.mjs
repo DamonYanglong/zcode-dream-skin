@@ -143,7 +143,7 @@ function derivePalettes(srcColors, avgRgb) {
     trajUser: hslCss([aHue, aSat, 0.38]),
     homeVeil: panel_(sat(0.3), 94, 0.38),
     bgVeil: panel_(sat(0.3), 94, 0.42),
-    dialogVeil: panel_(sat(0.3), 94, 0.72),
+    dialogVeil: panel_(sat(0.3), 94, 0.45),
     sidebarBg: panel_(sat(0.3), 94, 0.72),
   };
   return { dark, light };

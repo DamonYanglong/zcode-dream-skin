@@ -92,7 +92,7 @@ html.dark:not(:has(.history-message)) {
   --color-background-alt: transparent !important;
 }
 html:not(.dark):has(.history-message) {
-  --color-background-alt: hsl(30.0 2.9% 94% / 0.72) !important;
+  --color-background-alt: hsl(30.0 2.9% 94% / 0.45) !important;
 }
 html:not(.dark):not(:has(.history-message)) {
   --color-background-alt: transparent !important;
