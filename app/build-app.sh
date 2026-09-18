@@ -22,6 +22,18 @@ echo "[1/4] 编译 Swift 菜单栏程序 ..."
 /usr/bin/swiftc -O -swift-version 5 -o "$APP/Contents/MacOS/$EXEC_NAME" "$REPO/app/main.swift"
 
 echo "[2/4] 组装 app bundle ..."
+# 应用图标：取内置主题背景图生成 icns（修复 Finder/启动台通用图标问题）
+ICONSET="$BUILD/DreamSkin.iconset"
+rm -rf "$ICONSET" && mkdir -p "$ICONSET"
+ART="$REPO/themes/gothic-void-crusade/background.jpg"
+for s in 16 32 128 256 512; do
+  /usr/bin/sips -s format png -z $s $s "$ART" --out "$ICONSET/icon_${s}x${s}.png" >/dev/null 2>&1
+  d=$((s * 2))
+  /usr/bin/sips -s format png -z $d $d "$ART" --out "$ICONSET/icon_${s}x${s}@2x.png" >/dev/null 2>&1
+done
+ICON="$APP/Contents/Resources/DreamSkin.icns"
+/usr/bin/iconutil -c icns "$ICONSET" -o "$ICON" || exit 1
+
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -36,6 +48,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>$VERSION</string>
   <key>CFBundleVersion</key><string>$VERSION</string>
+  <key>CFBundleIconFile</key><string>DreamSkin</string>
   <key>LSMinimumSystemVersion</key><string>13.0</string>
   <key>LSMultipleInstancesProhibited</key><true/>
   <key>LSUIElement</key><true/>
@@ -60,6 +73,7 @@ rm -rf "$ARCHIVE"
 
 echo "[3/4] 打 DMG ..."
 STAGING="$BUILD/dmg-root"
+rm -rf "$STAGING"
 mkdir -p "$STAGING"
 cp -R "$APP" "$STAGING/"
 ln -s /Applications "$STAGING/Applications"

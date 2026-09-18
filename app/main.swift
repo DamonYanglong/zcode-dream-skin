@@ -57,6 +57,8 @@ func runEngine(script: String, args: String, completion: @escaping (String?) -> 
         var env = ProcessInfo.processInfo.environment
         env["ZDS_THEMES_DIR"] = userThemesDir.path
         env["ZDS_STATE_DIR"] = appSupport.path
+        // login shell 不一定含 Homebrew 路径，显式补全以找到 node
+        env["PATH"] = "/opt/homebrew/bin:/usr/local/bin:" + (env["PATH"] ?? "/usr/bin:/bin")
         p.environment = env
         let out = Pipe()
         p.standardOutput = out
@@ -88,22 +90,29 @@ func alert(_ title: String, _ body: String) {
 
 // ---------- 菜单栏 app ----------
 final class MenuController: NSObject, NSMenuDelegate {
-    let statusItem: NSStatusItem
+    var statusItem: NSStatusItem?
     let menu = NSMenu()
 
     override init() {
-        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         super.init()
         menu.delegate = self
         menu.autoenablesItems = false
-        if let button = statusItem.button {
+    }
+
+    /// 必须在 app 完成启动（runloop 转起来）之后再创建 status item：
+    /// 过早创建会拿到陈旧坐标（实测落在所有显示器之外，永不纠正）。
+    func installStatusItem() {
+        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        if let button = item.button {
             if let img = NSImage(systemSymbolName: "paintpalette", accessibilityDescription: "ZCode Dream Skin") {
+                img.isTemplate = true
                 button.image = img
             } else {
-                button.title = "🎨"
+                button.title = "ZDS"
             }
         }
-        statusItem.menu = menu
+        item.menu = menu
+        statusItem = item
     }
 
     // 每次打开菜单时重建：主题列表/当前勾选保持新鲜
@@ -223,4 +232,6 @@ final class MenuController: NSObject, NSMenuDelegate {
 let app = NSApplication.shared
 let controller = MenuController()
 app.setActivationPolicy(.accessory)
+// runloop 转起来后再装 status item，确保拿到正确的屏幕坐标
+DispatchQueue.main.async { controller.installStatusItem() }
 app.run()
