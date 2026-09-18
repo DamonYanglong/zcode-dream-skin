@@ -17,7 +17,6 @@ html {
   background-size: cover !important;
   background-position: 76% 45% !important;
   background-repeat: no-repeat !important;
-  background-attachment: fixed !important;
 }
 
 /* ---- 语义变量覆盖（暗色） ----
@@ -71,7 +70,7 @@ html.dark {
  * 金色强调压深一档（#96742e）保证浅底对比度。
  */
 html:not(.dark) {
-  background-image: linear-gradient(rgba(243, 234, 215, 0.6), rgba(243, 234, 215, 0.6)), var(--zds-bg) !important;
+  background-image: linear-gradient(rgba(243, 234, 215, 0.42), rgba(243, 234, 215, 0.42)), var(--zds-bg) !important;
   --color-background: transparent !important;
   --color-background-alt: rgba(248, 243, 230, 0.55) !important;
   --color-background-win-alt: rgba(243, 234, 215, 0.85) !important;
@@ -138,9 +137,9 @@ html.dark:not(:has(.history-message)) {
 html:not(.dark):has(.history-message) {
   --color-background-alt: rgba(243, 234, 215, 0.72) !important;
 }
-/* 首页（浅）：轻蒙层（暗调背景图上保深字可读的最低限度） */
+/* 首页（浅）：不再叠第二层蒙层——背景图自带 0.42 雾化，图片清晰优先 */
 html:not(.dark):not(:has(.history-message)) {
-  --color-background-alt: rgba(243, 234, 215, 0.38) !important;
+  --color-background-alt: transparent !important;
 }
 
 /* 侧栏：Codex 式半透明 + 毛玻璃，与主区底色解耦 */

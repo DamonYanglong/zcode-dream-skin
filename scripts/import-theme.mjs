@@ -142,7 +142,7 @@ function derivePalettes(srcColors, avgRgb) {
     terminalBg: panel_(sat(0.2), 94, 0.95),
     trajUser: hslCss([aHue, aSat, 0.38]),
     homeVeil: panel_(sat(0.3), 94, 0.38),
-    bgVeil: panel_(sat(0.3), 94, 0.6),
+    bgVeil: panel_(sat(0.3), 94, 0.42),
     dialogVeil: panel_(sat(0.3), 94, 0.72),
     sidebarBg: panel_(sat(0.3), 94, 0.72),
   };
@@ -208,7 +208,6 @@ html {
   background-size: cover !important;
   background-position: ${pos} !important;
   background-repeat: no-repeat !important;
-  background-attachment: fixed !important;
 }
 /* 浅色仿 Codex 手法：背景图先叠暖白蒙层提亮雾化，控件再半透明衔接 */
 html:not(.dark) {
@@ -228,7 +227,7 @@ html:not(.dark):has(.history-message) {
   --color-background-alt: ${normalize(palettes.light.dialogVeil)} !important;
 }
 html:not(.dark):not(:has(.history-message)) {
-  --color-background-alt: ${normalize(palettes.light.homeVeil)} !important;
+  --color-background-alt: transparent !important;
 }
 aside[data-testid="sidebar"] {
   background: ${normalize(palettes.dark.sidebarBg)} !important;

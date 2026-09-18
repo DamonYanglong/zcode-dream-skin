@@ -6,11 +6,10 @@ html {
   background-size: cover !important;
   background-position: 76% 45% !important;
   background-repeat: no-repeat !important;
-  background-attachment: fixed !important;
 }
 /* 浅色仿 Codex 手法：背景图先叠暖白蒙层提亮雾化，控件再半透明衔接 */
 html:not(.dark) {
-  background-image: linear-gradient(hsl(30.0 2.9% 94% / 0.6), hsl(30.0 2.9% 94% / 0.6)), var(--zds-bg) !important;
+  background-image: linear-gradient(hsl(30.0 2.9% 94% / 0.42), hsl(30.0 2.9% 94% / 0.42)), var(--zds-bg) !important;
 }
 
 html.dark {
@@ -96,7 +95,7 @@ html:not(.dark):has(.history-message) {
   --color-background-alt: hsl(30.0 2.9% 94% / 0.72) !important;
 }
 html:not(.dark):not(:has(.history-message)) {
-  --color-background-alt: hsl(30.0 2.9% 94% / 0.38) !important;
+  --color-background-alt: transparent !important;
 }
 aside[data-testid="sidebar"] {
   background: hsl(30.0 6.7% 5% / 0.72) !important;
