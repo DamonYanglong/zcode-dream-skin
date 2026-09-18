@@ -26,6 +26,15 @@ const root = path.resolve(here, "..");
 const CODEX_THEMES_DIR = path.join(
   process.env.HOME, "Library/Application Support/CodexDreamSkinStudio/themes",
 );
+const USER_THEMES_DIR = path.join(
+  process.env.HOME, "Library/Application Support/ZCodeDreamSkin/themes",
+);
+// 导入目的地：app 上下文用 ZDS_THEMES_DIR；CLI 默认进用户主题库（菜单栏 app 可见），--into-repo 才进仓库
+function themesDestDir() {
+  if (process.env.ZDS_THEMES_DIR) return process.env.ZDS_THEMES_DIR;
+  if (args.includes("--into-repo")) return path.join(root, "themes");
+  return USER_THEMES_DIR;
+}
 
 // ---------- 颜色工具 ----------
 function hexToRgb(hex) {
@@ -276,9 +285,7 @@ function loadSourceTheme(dir) {
 function importOne(srcDir) {
   const { meta, imgPath, imgName } = loadSourceTheme(srcDir);
   const id = `codex-${meta.id || path.basename(srcDir)}`.replace(/[^a-z0-9-]/gi, "-").toLowerCase();
-  // 目的地优先取 ZDS_THEMES_DIR（菜单栏 app 场景落到用户目录，bundle 内不可写）
-  const themesRoot = process.env.ZDS_THEMES_DIR || path.join(root, "themes");
-  const destDir = path.join(themesRoot, id);
+  const destDir = path.join(themesDestDir(), id);
   fs.mkdirSync(destDir, { recursive: true });
   fs.copyFileSync(imgPath, path.join(destDir, imgName));
 
@@ -300,6 +307,38 @@ function importOne(srcDir) {
   return id;
 }
 
+// ---------- ZIP 导入 ----------
+function importZip(zipPath) {
+  if (!fs.existsSync(zipPath)) throw new Error(`文件不存在: ${zipPath}`);
+  const work = fs.mkdtempSync(path.join("/tmp", "zds-zip-"));
+  try {
+    execFileSync("/usr/bin/unzip", ["-o", "-q", zipPath, "-d", work]);
+    // zip-slip 防护：确认解压产物都留在 work 内
+    const check = (dir) => {
+      for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+        const full = path.join(dir, e.name);
+        if (!path.resolve(full).startsWith(path.resolve(work))) throw new Error("zip 路径越界，已拒绝");
+        if (e.isDirectory()) check(full);
+      }
+    };
+    check(work);
+    // 主题根：work 根目录有 theme.json → 直接用；否则找含 theme.json 的最浅子目录
+    let themeRoot = null;
+    const find = (dir, depth) => {
+      if (themeRoot || depth > 3) return;
+      if (fs.existsSync(path.join(dir, "theme.json"))) { themeRoot = dir; return; }
+      for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+        if (e.isDirectory()) find(path.join(dir, e.name), depth + 1);
+      }
+    };
+    find(work, 0);
+    if (!themeRoot) throw new Error("zip 内未找到 theme.json（不是有效的主题包）");
+    importOne(themeRoot);
+  } finally {
+    fs.rmSync(work, { recursive: true, force: true });
+  }
+}
+
 // ---------- 入口 ----------
 const args = process.argv.slice(2);
 if (args.includes("--list")) {
@@ -315,6 +354,8 @@ if (args.includes("--list")) {
 }
 const dirIdx = args.indexOf("--dir");
 if (dirIdx !== -1) { importOne(path.resolve(args[dirIdx + 1])); process.exit(0); }
+const zipIdx = args.indexOf("--zip");
+if (zipIdx !== -1) { importZip(path.resolve(args[zipIdx + 1])); process.exit(0); }
 if (args.includes("--all")) {
   for (const d of fs.readdirSync(CODEX_THEMES_DIR, { withFileTypes: true })) {
     if (d.isDirectory()) { try { importOne(path.join(CODEX_THEMES_DIR, d.name)); } catch (e) { console.error(`[zds] ✗ ${d.name}: ${e.message}`); } }
@@ -323,5 +364,5 @@ if (args.includes("--all")) {
 }
 const idIdx = args.indexOf("--id");
 if (idIdx !== -1) { importOne(path.join(CODEX_THEMES_DIR, args[idIdx + 1])); process.exit(0); }
-console.error("用法: import-theme.mjs --list | --all | --id <sourceId> | --dir <path>");
+console.error("用法: import-theme.mjs --list | --all | --id <sourceId> | --dir <path> | --zip <file.zip> [--into-repo]");
 process.exit(1);

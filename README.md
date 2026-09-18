@@ -75,6 +75,7 @@ themes/<id>/
 `~/Library/Application Support/CodexDreamSkinStudio/themes/`。本项目可以直接消费它们：
 
 ```bash
+node scripts/import-theme.mjs --zip x.zip     # 直接导入市场下载的 ZIP 包
 node scripts/import-theme.mjs --list          # 列出可导入主题
 node scripts/import-theme.mjs --all           # 全部导入
 node scripts/import-theme.mjs --id preset-x   # 导入指定主题
@@ -82,6 +83,9 @@ node scripts/import-theme.mjs --dir /path     # 导入任意 Codex 格式主题�
 
 node scripts/apply.mjs --theme codex-preset-x # 切到导入的主题
 ```
+
+导入目的地：菜单栏 app 走用户主题库（`~/Library/Application Support/ZCodeDreamSkin/themes`），
+CLI 默认同路径，加 `--into-repo` 才写入仓库（用于贡献主题）。
 
 配色策略：源主题带 `colors` 则映射；否则**从背景图自动取平均色推导**暗/亮两套变量
 （`sips` 1×1 采样，macOS 自带）。生成的 `theme.css` 头部带 `AUTO-GENERATED` 标记，可手调。

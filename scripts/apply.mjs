@@ -32,12 +32,13 @@ if (typeof WebSocket !== "function") {
 }
 
 // ---------- 读取主题包 ----------
-// 查找顺序：ZDS_THEMES_DIR（用户主题目录，菜单栏 app 用）→ 仓库内 themes/
-const userThemesDir = process.env.ZDS_THEMES_DIR || "";
+// 查找顺序：用户主题库（ZDS_THEMES_DIR 或默认支持目录）→ 仓库内 themes/
+const userThemesDir = process.env.ZDS_THEMES_DIR ||
+  path.join(process.env.HOME || "", "Library/Application Support/ZCodeDreamSkin/themes");
 const candidates = [
-  userThemesDir ? path.join(userThemesDir, THEME) : null,
+  path.join(userThemesDir, THEME),
   path.join(root, "themes", THEME),
-].filter(Boolean);
+];
 const themeDir = candidates.find((p) => fs.existsSync(path.join(p, "theme.json")));
 if (!themeDir) {
   console.error(`[zds] 找不到主题 «${THEME}»（查找了: ${candidates.join(", ")}）`);

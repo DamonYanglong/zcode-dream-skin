@@ -151,6 +151,7 @@ final class MenuController: NSObject, NSMenuDelegate {
         self.addItem("以换肤模式启动 ZCode…", #selector(startThemed))
         self.addItem("重新注入当前主题", #selector(reapply))
         self.addItem("恢复官方外观", #selector(restore))
+        self.addItem("导入主题 ZIP…", #selector(importZipFile))
         self.addItem("导入 Codex 主题库全部…", #selector(importAll))
         self.addItem("打开主题文件夹", #selector(openThemes))
         menu.addItem(.separator())
@@ -203,6 +204,23 @@ final class MenuController: NSObject, NSMenuDelegate {
     @objc func restore() {
         runEngine(script: "restore.mjs", args: "") { err in
             DispatchQueue.main.async { if let err = err { alert("恢复失败", err) } }
+        }
+    }
+
+    @objc func importZipFile() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = false
+        panel.allowedFileTypes = ["zip"]
+        panel.message = "选择 DreamSkin 主题 ZIP 包（theme.json + theme.css + 背景图）"
+        NSApp.activate(ignoringOtherApps: true)
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        runEngine(script: "import-theme.mjs", args: "--zip \"\(url.path)\"") { err in
+            DispatchQueue.main.async {
+                if let err = err { alert("导入失败", err) }
+                else { alert("导入完成", "主题已加入你的主题库，重新打开菜单即可切换。") }
+            }
         }
     }
 
