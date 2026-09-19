@@ -177,16 +177,9 @@ final class MenuController: NSObject, NSMenuDelegate {
     }
 
     @objc func startThemed() {
-        let p = Process()
-        p.executableURL = URL(fileURLWithPath: "/bin/zsh")
-        p.arguments = ["-lc", "\"\(scriptsDir.path)/start-themed.sh\" 2>&1"]
-        let out = Pipe(); p.standardOutput = out; p.standardError = out
-        do { try p.run() } catch { alert("启动失败", error.localizedDescription) }
-        DispatchQueue.global(qos: .userInitiated).async {
-            p.waitUntilExit()
-            let text = String(data: out.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
-            if p.terminationStatus != 0 {
-                DispatchQueue.main.async { alert("换肤模式启动失败", String(text.prefix(600))) }
+        runEngine(script: "start-themed.mjs", args: "") { err in
+            DispatchQueue.main.async {
+                if let err = err { alert("换肤模式启动失败", err) }
             }
         }
     }

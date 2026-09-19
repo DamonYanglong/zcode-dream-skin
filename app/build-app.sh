@@ -61,7 +61,7 @@ PLIST
 # （v1.0.3 踩过：二进制新、脚本旧）；git ls-files 同样天然排除 .gitignore 的受限素材
 ARCHIVE="$BUILD/archive"
 rm -rf "$ARCHIVE" && mkdir -p "$ARCHIVE"
-cd "$REPO" && git ls-files -z | rsync -a --files-from=- -- . "$ARCHIVE/" && cd "$REPO"
+cd "$REPO" && git ls-files -z | rsync -a --from0 --files-from=- -- . "$ARCHIVE/" && cd "$REPO"
 mkdir -p "$APP/Contents/Resources/engine"
 mv "$ARCHIVE/scripts" "$APP/Contents/Resources/engine/scripts"
 mv "$ARCHIVE/themes" "$APP/Contents/Resources/engine/themes"

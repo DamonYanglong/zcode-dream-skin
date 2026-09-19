@@ -8,11 +8,13 @@
  */
 
 import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 
 const args = process.argv.slice(2);
 const argOf = (n, d) => (args.indexOf(n) !== -1 && args[args.indexOf(n) + 1] ? args[args.indexOf(n) + 1] : d);
 const PORT = Number(argOf("--port", "9342"));
-const OUT = argOf("--out", "/tmp/zds-shot.png");
+const OUT = argOf("--out", path.join(os.tmpdir(), "zds-shot.png"));
 
 const targets = await (await fetch(`http://127.0.0.1:${PORT}/json`)).json();
 const page = targets.find((t) => t.type === "page" && t.webSocketDebuggerUrl);

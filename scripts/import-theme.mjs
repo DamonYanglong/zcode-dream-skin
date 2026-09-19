@@ -16,33 +16,25 @@
  */
 
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { inflateSync } from "node:zlib";
 import { fileURLToPath } from "node:url";
+import { codexThemesDir, isMac, isWin, userThemesDir } from "./lib/platform.mjs";
+import { hexToRgb, relLum } from "./lib/color.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "..");
-const CODEX_THEMES_DIR = path.join(
-  process.env.HOME, "Library/Application Support/CodexDreamSkinStudio/themes",
-);
-const USER_THEMES_DIR = path.join(
-  process.env.HOME, "Library/Application Support/ZCodeDreamSkin/themes",
-);
 // 导入目的地：app 上下文用 ZDS_THEMES_DIR；CLI 默认进用户主题库（菜单栏 app 可见），--into-repo 才进仓库
 function themesDestDir() {
   if (process.env.ZDS_THEMES_DIR) return process.env.ZDS_THEMES_DIR;
   if (args.includes("--into-repo")) return path.join(root, "themes");
-  return USER_THEMES_DIR;
+  return userThemesDir();
 }
 
 // ---------- 颜色工具 ----------
-function hexToRgb(hex) {
-  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
-  if (!m) throw new Error(`非法十六进制颜色: ${hex}`);
-  const n = parseInt(m[1], 16);
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-}
+// hexToRgb / relLum 复用 lib/color.mjs；此处只保留调色板推导专用的 hsl 工具
 function rgbToHsl([r, g, b]) {
   r /= 255; g /= 255; b /= 255;
   const max = Math.max(r, g, b), min = Math.min(r, g, b);
@@ -61,9 +53,16 @@ function hslCss([h, s, l]) {
 }
 const clamp01 = (x) => Math.min(1, Math.max(0, x));
 
-/** sips 把图缩到 1x1 PNG，解析出全图平均色（macOS 自带，无需图像库） */
+/** 平均色取法按平台选择自带工具：macOS sips / Windows System.Drawing / Linux ImageMagick */
 function averageColorOfImage(imgPath) {
-  const tmp = `/tmp/zds-avg-${process.pid}.png`;
+  if (isMac) return averageColorViaSips(imgPath);
+  if (isWin) return averageColorViaSystemDrawing(imgPath);
+  return averageColorViaMagick(imgPath);
+}
+
+/** macOS：sips 把图缩到 1x1 PNG，解析出全图平均色（系统自带，无需图像库） */
+function averageColorViaSips(imgPath) {
+  const tmp = path.join(os.tmpdir(), `zds-avg-${process.pid}.png`);
   try {
     execFileSync("/usr/bin/sips", ["-s", "format", "png", "-z", "1", "1", imgPath, "--out", tmp], { stdio: "pipe" });
     const png = fs.readFileSync(tmp);
@@ -88,6 +87,43 @@ function averageColorOfImage(imgPath) {
   }
 }
 
+/** Windows：System.Drawing 缩到 1x1 取像素（系统自带）。路径走环境变量避免引号转义 */
+function averageColorViaSystemDrawing(imgPath) {
+  const script = [
+    "Add-Type -AssemblyName System.Drawing",
+    "$img=[System.Drawing.Image]::FromFile($env:ZDS_IMG)",
+    "$bmp=New-Object System.Drawing.Bitmap 1,1",
+    "$g=[System.Drawing.Graphics]::FromImage($bmp)",
+    "$g.InterpolationMode=[System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic",
+    "$g.DrawImage($img,0,0,1,1)",
+    "$p=$bmp.GetPixel(0,0)",
+    "Write-Output (\"{0} {1} {2}\" -f $p.R,$p.G,$p.B)",
+    "$g.Dispose(); $bmp.Dispose(); $img.Dispose()",
+  ].join("; ");
+  const out = execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", script], {
+    stdio: ["ignore", "pipe", "pipe"],
+    env: { ...process.env, ZDS_IMG: imgPath },
+  }).toString().trim();
+  const m = /^(\d+)\s+(\d+)\s+(\d+)$/.exec(out);
+  if (!m) throw new Error(`System.Drawing 返回无法解析: ${out}`);
+  return [Number(m[1]), Number(m[2]), Number(m[3])];
+}
+
+/** Linux/WSL：ImageMagick magick/convert 缩到 1x1，txt:- 输出解析十六进制色 */
+function averageColorViaMagick(imgPath) {
+  for (const bin of ["magick", "convert"]) {
+    try {
+      const out = execFileSync(bin, [imgPath, "-resize", "1x1!", "txt:-"], { stdio: ["ignore", "pipe", "pipe"] }).toString();
+      const m = /#([0-9a-f]{6})/i.exec(out);
+      if (m) {
+        const n = parseInt(m[1], 16);
+        return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+      }
+    } catch { /* 换下一个候选 */ }
+  }
+  throw new Error("Linux 取平均色需要 ImageMagick（magick 或 convert）");
+}
+
 // ---------- 调色板推导 ----------
 /**
  * 由源调色板（可能为空）+ 背景图平均色推导暗/亮两套变量值。
@@ -104,9 +140,32 @@ function derivePalettes(srcColors, avgRgb) {
   const sat = (x) => clamp01(s * x);
   const aHue = accentH, aSat = accentS;
   const H = (deg) => (deg * 360).toFixed(1);
+
+  // 源主题文字色只给适合对应外壳的调色板用：深色文字进暗壳会直接不可读
+  // （DeepSeek 鲸鱼娘的 #352970/#030303 踩过），亮度不达标就走推导值
+  const srcText = srcColors?.text;
+  const srcMuted = srcColors?.muted;
+  const darkFg = srcText && relLum(hexToRgb(srcText)) >= 0.5 ? srcText : hslCss([h, sat(0.25), 0.9]);
+  const darkFgSubtle = srcMuted && relLum(hexToRgb(srcMuted)) >= 0.45 ? srcMuted : hslCss([h, sat(0.2), 0.72]);
+  const lightFg = srcText && relLum(hexToRgb(srcText)) <= 0.62 ? srcText : hslCss([h, sat(0.2), 0.14]);
+
   // 内部格式约定：纯色 "H S% L%"，带透明度 "H S% L% / a"，输出时统一由 normalize 包 hsl()
   const panel_ = (sv, lv, a) => `${H(h)} ${(sv * 100).toFixed(1)}% ${lv}% / ${a}`;
   const acc_ = (lv, a) => `${H(aHue)} ${(aSat * 100).toFixed(1)}% ${lv}% / ${a}`;
+
+  // 市场调色板细粒度映射（缺字段回退到面板/accent 推导）：
+  // line→边框系、highlight→选中/表面态、secondary→用户消息色、panelAlt→输入框底
+  const lineHsl = srcColors?.line ? rgbToHsl(hexToRgb(srcColors.line)) : null;
+  const hlHsl = srcColors?.highlight ? rgbToHsl(hexToRgb(srcColors.highlight)) : null;
+  const secHsl = srcColors?.secondary ? rgbToHsl(hexToRgb(srcColors.secondary)) : null;
+  const paltHsl = srcColors?.panelAlt ? rgbToHsl(hexToRgb(srcColors.panelAlt)) : null;
+  const lHue = lineHsl?.[0] ?? aHue, lSat = lineHsl ? clamp01(lineHsl[1]) : aSat;
+  const selHue = hlHsl?.[0] ?? aHue, selSat = hlHsl ? clamp01(hlHsl[1]) : aSat;
+  const inHue = paltHsl?.[0] ?? h, inSat = paltHsl ? clamp01(paltHsl[1]) : s;
+  const line_ = (lv, a) => `${H(lHue)} ${(lSat * 100).toFixed(1)}% ${lv}% / ${a}`;
+  const sel_ = (lv, a) => `${H(selHue)} ${(selSat * 100).toFixed(1)}% ${lv}% / ${a}`;
+  const input_ = (sv, lv, a) => `${H(inHue)} ${(clamp01(inSat * sv) * 100).toFixed(1)}% ${lv}% / ${a}`;
+  const trajOf = (hslArr, lv) => hslCss([hslArr[0], clamp01(hslArr[1]), lv]);
 
   const dark = {
     header: panel_(sat(0.6), 8, 0.8),
@@ -114,19 +173,19 @@ function derivePalettes(srcColors, avgRgb) {
     sidebar: panel_(sat(0.7), 5, 0.84),
     card: panel_(sat(0.7), 12, 0.88),
     popover: panel_(sat(0.7), 12, 0.97),
-    input: panel_(sat(0.6), 9, 0.9),
+    input: input_(0.6, 9, 0.9),
     brand: hslCss([aHue, aSat, 0.62]),
     accent: acc_(62, 0.14),
-    border: acc_(62, 0.24),
-    borderHover: acc_(62, 0.45),
-    surface: acc_(62, 0.05),
-    surfaceHover: acc_(62, 0.1),
-    selected: acc_(62, 0.16),
-    fg: srcColors?.text ?? hslCss([h, sat(0.25), 0.9]),
-    fgSubtle: srcColors?.muted ?? hslCss([h, sat(0.2), 0.72]),
+    border: line_(60, 0.28),
+    borderHover: line_(60, 0.5),
+    surface: sel_(62, 0.05),
+    surfaceHover: sel_(62, 0.1),
+    selected: sel_(62, 0.16),
+    fg: darkFg,
+    fgSubtle: darkFgSubtle,
     fgSubtlest: hslCss([h, sat(0.18), 0.58]),
     terminalBg: panel_(sat(0.6), 5, 0.92),
-    trajUser: hslCss([aHue, aSat, 0.72]),
+    trajUser: secHsl ? trajOf(secHsl, 0.72) : hslCss([aHue, aSat, 0.72]),
     dialogVeil: panel_(sat(0.6), 9, 0.78),
     sidebarBg: panel_(sat(0.7), 5, 0.72),
     baseTone: `${H(h)} ${(sat(0.6) * 100).toFixed(1)}% 5%`,
@@ -138,19 +197,19 @@ function derivePalettes(srcColors, avgRgb) {
     sidebar: panel_(sat(0.32), 92, 0.86),
     card: panel_(sat(0.3), 96, 0.88),
     popover: panel_(sat(0.3), 96, 0.97),
-    input: panel_(sat(0.3), 96, 0.92),
+    input: input_(0.3, 96, 0.92),
     brand: hslCss([aHue, aSat, 0.38]),
     accent: acc_(50, 0.18),
-    border: panel_(sat(0.4), 25, 0.25),
-    borderHover: panel_(sat(0.4), 25, 0.45),
-    surface: panel_(sat(0.5), 30, 0.05),
-    surfaceHover: panel_(sat(0.5), 30, 0.09),
-    selected: acc_(50, 0.18),
-    fg: hslCss([h, sat(0.2), 0.14]),
+    border: line_(32, 0.25),
+    borderHover: line_(32, 0.45),
+    surface: sel_(50, 0.05),
+    surfaceHover: sel_(50, 0.09),
+    selected: sel_(50, 0.18),
+    fg: lightFg,
     fgSubtle: hslCss([h, sat(0.18), 0.36]),
     fgSubtlest: hslCss([h, sat(0.15), 0.52]),
     terminalBg: panel_(sat(0.2), 94, 0.95),
-    trajUser: hslCss([aHue, aSat, 0.38]),
+    trajUser: secHsl ? trajOf(secHsl, 0.38) : hslCss([aHue, aSat, 0.38]),
     homeVeil: panel_(sat(0.3), 94, 0.38),
     bgVeil: panel_(sat(0.3), 94, 0.42),
     dialogVeil: panel_(sat(0.3), 94, 0.45),
@@ -207,16 +266,24 @@ function themeCssBlock(selector, p, focus) {
 `;
 }
 
-function generateThemeCss(palettes, focus, themeName) {
+function generateThemeCss(palettes, focus, themeName, avgLum = 0) {
   const pos = `${Math.round((focus?.focusX ?? 0.7) * 100)}% ${Math.round((focus?.focusY ?? 0.5) * 100)}%`;
   const D = (a) => `hsl(${palettes.dark.baseTone} / ${a})`;
   const L = (a) => `hsl(${palettes.light.baseTone} / ${a})`;
   const panelD = palettes.dark.sidebarBg.split(" / ")[0];
   const panelL = palettes.light.sidebarBg.split(" / ")[0];
+  // 亮图（平均亮度>0.5）双壳都走轻薄路线：图本身即底色，纱只保文字区/输入区可读。
+  // 暗壳对话页蒙层加厚防"亮底亮字"；浅色壳大幅减纱防"白纱洗图"（对齐市场效果图观感）。
+  const brightArt = avgLum > 0.5;
+  const convoV = brightArt ? [".60", ".68", ".88", "1"] : [".10", ".18", ".76", "1"];
+  const convoH = brightArt ? [".70", ".50", ".25"] : [".56", ".36", ".12"];
+  const homeL = brightArt ? ["0", "0", "0", "0"] : [".96", ".82", ".20", "0"];
+  const convoVL = brightArt ? [".12", ".25", ".55", ".88"] : [".08", ".22", ".78", "1"];
+  const convoHL = brightArt ? [".50", ".28", ".08"] : [".68", ".40", ".12"];
   return `/*
  * zcode-dream-skin · ${themeName}（AUTO-GENERATED —— 配色由背景图自动推导，可手调）
  * 方向渐变 scrim（对齐 Codex Dream Skin）：首页左重右透，对话页顶部清、底部实。
- */
+${brightArt ? " * 亮色背景图：双壳自动轻薄化——暗壳对话页蒙层加厚保可读，浅色壳减纱保鲜艳。\n" : ""} */
 html {
   background-size: auto, auto, cover !important;
   background-position: center, center, ${pos} !important;
@@ -232,22 +299,22 @@ html.dark:not(:has(.history-message)) {
 }
 html.dark:has(.history-message) {
   background-image:
-    linear-gradient(180deg, ${D(".10")} 0%, ${D(".18")} 32%, ${D(".76")} 68%, ${D("1")} 100%),
-    linear-gradient(90deg, ${D(".56")} 0%, ${D(".36")} 48%, ${D(".12")} 100%),
+    linear-gradient(180deg, ${D(convoV[0])} 0%, ${D(convoV[1])} 32%, ${D(convoV[2])} 68%, ${D(convoV[3])} 100%),
+    linear-gradient(90deg, ${D(convoH[0])} 0%, ${D(convoH[1])} 48%, ${D(convoH[2])} 100%),
     var(--zds-bg) !important;
   --color-background-alt: transparent !important;
 }
 html:not(.dark):not(:has(.history-message)) {
   background-image:
-    linear-gradient(90deg, ${L(".96")} 0%, ${L(".82")} 50%, ${L(".20")} 84%, transparent 100%),
+    linear-gradient(90deg, ${L(homeL[0])} 0%, ${L(homeL[1])} 50%, ${L(homeL[2])} 84%, ${L(homeL[3])} 100%),
     linear-gradient(transparent, transparent),
     var(--zds-bg) !important;
   --color-background-alt: transparent !important;
 }
 html:not(.dark):has(.history-message) {
   background-image:
-    linear-gradient(180deg, ${L(".08")} 0%, ${L(".22")} 34%, ${L(".78")} 70%, ${L("1")} 100%),
-    linear-gradient(90deg, ${L(".68")} 0%, ${L(".40")} 48%, ${L(".12")} 100%),
+    linear-gradient(180deg, ${L(convoVL[0])} 0%, ${L(convoVL[1])} 34%, ${L(convoVL[2])} 70%, ${L(convoVL[3])} 100%),
+    linear-gradient(90deg, ${L(convoHL[0])} 0%, ${L(convoHL[1])} 48%, ${L(convoHL[2])} 100%),
     var(--zds-bg) !important;
   --color-background-alt: transparent !important;
 }
@@ -289,9 +356,13 @@ function importOne(srcDir) {
   fs.mkdirSync(destDir, { recursive: true });
   fs.copyFileSync(imgPath, path.join(destDir, imgName));
 
-  const avgRgb = averageColorOfImage(imgPath);
+  // 平均色优先复用已记录值（重推导无需图像工具）；没有才现场采样
+  const avgRgb = meta.derivedFrom?.averageColor
+    ? hexToRgb(meta.derivedFrom.averageColor)
+    : averageColorOfImage(imgPath);
+  const avgLum = relLum(avgRgb);
   const palettes = derivePalettes(meta.colors, avgRgb);
-  fs.writeFileSync(path.join(destDir, "theme.css"), generateThemeCss(palettes, meta.art, meta.name || id));
+  fs.writeFileSync(path.join(destDir, "theme.css"), generateThemeCss(palettes, meta.art, meta.name || id, avgLum));
   fs.writeFileSync(path.join(destDir, "theme.json"), JSON.stringify({
     schema: "zcode-dream-skin-theme/1",
     id,
@@ -301,18 +372,28 @@ function importOne(srcDir) {
     importedFrom: "Codex Dream Skin",
     sourceId: meta.id,
     autoGenerated: true,
+    sourceColors: meta.colors || null,   // 留档：便于日后重推导配色
     derivedFrom: { averageColor: `#${avgRgb.map((x) => x.toString(16).padStart(2, "0")).join("")}` },
   }, null, 2));
-  console.log(`[zds] ✓ 已导入 «${meta.name || id}» → themes/${id}/（平均色 ${`#${avgRgb.map((x) => x.toString(16).padStart(2, "0")).join("")}`}）`);
+  console.log(`[zds] ✓ 已导入 «${meta.name || id}» → themes/${id}/（平均色 ${`#${avgRgb.map((x) => x.toString(16).padStart(2, "0")).join("")}`}，亮度 ${avgLum.toFixed(2)}${avgLum > 0.5 ? "，亮图：暗壳蒙层加厚" : ""}）`);
   return id;
 }
 
 // ---------- ZIP 导入 ----------
+/** 解压按平台选自带工具：Windows tar.exe（Win10+ 内置 bsdtar，可读 zip）；其余用 unzip */
+function unzipTo(zipPath, destDir) {
+  if (isWin) {
+    execFileSync("tar", ["-xf", zipPath, "-C", destDir], { windowsHide: true });
+  } else {
+    execFileSync("unzip", ["-o", "-q", zipPath, "-d", destDir]);
+  }
+}
+
 function importZip(zipPath) {
   if (!fs.existsSync(zipPath)) throw new Error(`文件不存在: ${zipPath}`);
-  const work = fs.mkdtempSync(path.join("/tmp", "zds-zip-"));
+  const work = fs.mkdtempSync(path.join(os.tmpdir(), "zds-zip-"));
   try {
-    execFileSync("/usr/bin/unzip", ["-o", "-q", zipPath, "-d", work]);
+    unzipTo(zipPath, work);
     // zip-slip 防护：确认解压产物都留在 work 内
     const check = (dir) => {
       for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -342,11 +423,12 @@ function importZip(zipPath) {
 // ---------- 入口 ----------
 const args = process.argv.slice(2);
 if (args.includes("--list")) {
-  if (!fs.existsSync(CODEX_THEMES_DIR)) { console.error(`[zds] 未找到 Codex 主题库: ${CODEX_THEMES_DIR}`); process.exit(1); }
-  for (const d of fs.readdirSync(CODEX_THEMES_DIR, { withFileTypes: true })) {
+  const srcDir = codexThemesDir();
+  if (!fs.existsSync(srcDir)) { console.error(`[zds] 未找到 Codex 主题库: ${srcDir}`); process.exit(1); }
+  for (const d of fs.readdirSync(srcDir, { withFileTypes: true })) {
     if (!d.isDirectory()) continue;
     try {
-      const { meta } = loadSourceTheme(path.join(CODEX_THEMES_DIR, d.name));
+      const { meta } = loadSourceTheme(path.join(srcDir, d.name));
       console.log(`  - ${meta.id || d.name}  «${meta.name || d.name}»${meta.colors ? " (带 colors)" : " (自动配色)"}`);
     } catch { /* 跳过不完整目录 */ }
   }
@@ -357,12 +439,13 @@ if (dirIdx !== -1) { importOne(path.resolve(args[dirIdx + 1])); process.exit(0);
 const zipIdx = args.indexOf("--zip");
 if (zipIdx !== -1) { importZip(path.resolve(args[zipIdx + 1])); process.exit(0); }
 if (args.includes("--all")) {
-  for (const d of fs.readdirSync(CODEX_THEMES_DIR, { withFileTypes: true })) {
-    if (d.isDirectory()) { try { importOne(path.join(CODEX_THEMES_DIR, d.name)); } catch (e) { console.error(`[zds] ✗ ${d.name}: ${e.message}`); } }
+  const srcDir = codexThemesDir();
+  for (const d of fs.readdirSync(srcDir, { withFileTypes: true })) {
+    if (d.isDirectory()) { try { importOne(path.join(srcDir, d.name)); } catch (e) { console.error(`[zds] ✗ ${d.name}: ${e.message}`); } }
   }
   process.exit(0);
 }
 const idIdx = args.indexOf("--id");
-if (idIdx !== -1) { importOne(path.join(CODEX_THEMES_DIR, args[idIdx + 1])); process.exit(0); }
+if (idIdx !== -1) { importOne(path.join(codexThemesDir(), args[idIdx + 1])); process.exit(0); }
 console.error("用法: import-theme.mjs --list | --all | --id <sourceId> | --dir <path> | --zip <file.zip> [--into-repo]");
 process.exit(1);

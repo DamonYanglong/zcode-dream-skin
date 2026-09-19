@@ -8,6 +8,7 @@
  */
 
 import { fileURLToPath } from "node:url";
+import { supportDir } from "./lib/platform.mjs";
 
 const args = process.argv.slice(2);
 const PORT = Number(args[args.indexOf("--port") + 1] || process.env.ZDS_PORT || "9342");
@@ -85,7 +86,6 @@ console.log("[zds] 提示：如需彻底关闭调试端口，请退出 ZCode 后
 try {
   const fs = await import("node:fs");
   const path = await import("node:path");
-  const stateDir = process.env.ZDS_STATE_DIR ||
-    path.join(process.env.HOME || "", "Library/Application Support/ZCodeDreamSkin");
+  const stateDir = process.env.ZDS_STATE_DIR || supportDir();
   fs.rmSync(path.join(stateDir, "current-theme"), { force: true });
 } catch { /* 忽略 */ }

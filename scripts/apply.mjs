@@ -10,6 +10,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { supportDir, userThemesDir, fileUrlOf } from "./lib/platform.mjs";
+import { cssColorLum } from "./lib/color.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "..");
@@ -32,11 +34,9 @@ if (typeof WebSocket !== "function") {
 }
 
 // ---------- 读取主题包 ----------
-// 查找顺序：用户主题库（ZDS_THEMES_DIR 或默认支持目录）→ 仓库内 themes/
-const userThemesDir = process.env.ZDS_THEMES_DIR ||
-  path.join(process.env.HOME || "", "Library/Application Support/ZCodeDreamSkin/themes");
+// 查找顺序：用户主题库（ZDS_THEMES_DIR 或平台默认目录）→ 仓库内 themes/
 const candidates = [
-  path.join(userThemesDir, THEME),
+  path.join(process.env.ZDS_THEMES_DIR || userThemesDir(), THEME),
   path.join(root, "themes", THEME),
 ];
 const themeDir = candidates.find((p) => fs.existsSync(path.join(p, "theme.json")));
@@ -54,10 +54,44 @@ if (theme.schema !== "zcode-dream-skin-theme/1") {
   console.error(`[zds] 不支持的主题 schema: ${theme.schema}`);
   process.exit(1);
 }
-const themeCss = fs.readFileSync(themeCssPath, "utf8");
+const themeCssRaw = fs.readFileSync(themeCssPath, "utf8");
+
+/**
+ * 注入前文字色兜底：任何主题（旧导入/手调/市场包）只要把过暗的文字色放进暗壳
+ * （或过亮的放进浅壳），在此自动纠正——引擎级保障，无需逐主题处理。
+ * 触发阈值刻意收紧（<0.18 / >0.82），只拦真正不可读的，不碰正常的中性色。
+ */
+function sanitizeThemeCss(css) {
+  const fixes = [];
+  const out = css.replace(/(html\.dark|html:not\(\.dark\))\s*\{([^}]*)\}/g, (whole, sel, body) => {
+    const isDark = sel === "html.dark";
+    const hueM = /--color-(?:panel|header):\s*hsl\(\s*([\d.]+)/.exec(body);
+    const hue = hueM ? hueM[1] : "225";
+    const newBody = body.replace(
+      /(--color-(?:foreground|foreground-subtle|popover-foreground)):\s*([^;!]+)/gi,
+      (line, prop, value) => {
+        const lum = cssColorLum(value);
+        if (lum === null) return line;
+        const alphaM = /\/\s*([\d.]+)\s*\)$/.exec(value);
+        const alpha = alphaM ? ` / ${alphaM[1]}` : "";
+        let fixed = null;
+        if (isDark && lum < 0.18) fixed = `hsl(${hue} 6% 90%${alpha})`;
+        if (!isDark && lum > 0.82) fixed = `hsl(${hue} 6% 14%${alpha})`;
+        if (!fixed) return line;
+        fixes.push(`${sel} ${prop}: ${value.trim()} → ${fixed}`);
+        return `${prop}: ${fixed}`;
+      },
+    );
+    return newBody !== body ? `${sel} {${newBody}}` : whole;
+  });
+  for (const f of fixes) console.log(`[zds] ⚠ 文字色自动纠正: ${f}`);
+  return out;
+}
+const themeCss = sanitizeThemeCss(themeCssRaw);
 
 // 背景引用改用 file:// URL：data URI 超过 ~2MB 会超出 Chromium custom property
 // 值上限被静默置空（大肥鱼/三上悠亚 1.8MB PNG 踩过），file URL 零体积且免传输。
+// 用 pathToFileURL 生成：Windows 盘符路径（C:\...）手拼会得到非法 URL。
 let bgFileUrl = "";
 if (theme.image) {
   const imgPath = path.join(themeDir, theme.image);
@@ -65,7 +99,7 @@ if (theme.image) {
     console.error(`[zds] 背景图缺失: ${imgPath}`);
     process.exit(1);
   }
-  bgFileUrl = "file://" + imgPath.split("/").map(encodeURIComponent).join("/");
+  bgFileUrl = fileUrlOf(imgPath);
   const { size } = fs.statSync(imgPath);
   console.log(`[zds] 背景图 ${theme.image}（${(size / 1024).toFixed(0)} KiB）→ ${bgFileUrl}`);
 }
@@ -169,7 +203,7 @@ try {
   }
 } catch (e) {
   console.error(`[zds] 无法连接 CDP 端点 http://${HOST}:${PORT} —— ${e.message}`);
-  console.error("[zds] 请先用 scripts/start-themed.sh 以调试端口启动 ZCode。");
+  console.error("[zds] 请先用 scripts/start-themed.mjs 以调试端口启动 ZCode。");
   process.exit(1);
 }
 
@@ -202,10 +236,9 @@ for (const page of pages) {
 
 console.log(`[zds] 完成：${okCount}/${pages.length} 个页面成功应用主题 «${theme.name}»。`);
 
-// 状态文件：菜单栏 app 读取以显示当前主题
+// 状态文件：菜单栏/托盘 app 读取以显示当前主题
 try {
-  const stateDir = process.env.ZDS_STATE_DIR ||
-    path.join(process.env.HOME || "", "Library/Application Support/ZCodeDreamSkin");
+  const stateDir = process.env.ZDS_STATE_DIR || supportDir();
   fs.mkdirSync(stateDir, { recursive: true });
   fs.writeFileSync(path.join(stateDir, "current-theme"), THEME, "utf8");
 } catch { /* 状态文件失败不影响注入 */ }
