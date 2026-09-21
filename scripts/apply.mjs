@@ -120,7 +120,8 @@ const CHROME_CSS = `
       var(--zds-bg) !important;
   }
   html:has(.history-message) .history-message {
-    background: rgb(8 10 14/.74) !important;
+    /* 近实底：Codex 的消息卡片底来自原生 token（panel 实色），不是半透明透图 */
+    background: rgb(16 16 18/.94) !important;
     border: 1px solid rgb(255 255 255/.06) !important;
     border-radius: 16px !important;
     padding: 10px 16px !important;
@@ -128,7 +129,7 @@ const CHROME_CSS = `
     max-width: 760px !important;
   }
   html:not(.dark):has(.history-message) .history-message {
-    background: rgb(250 247 240/.8) !important;
+    background: rgb(250 247 240/.94) !important;
     border-color: rgb(0 0 0/.06) !important;
   }
 `;
