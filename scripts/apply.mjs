@@ -134,13 +134,17 @@ const CHROME_CSS = `
     background: color-mix(in srgb, var(--color-card, rgb(250 247 240/.94)) 70%, transparent) !important;
     border-color: var(--color-border, rgb(0 0 0/.06)) !important;
   }
+  /* 亮色侧栏同步调透：引用主题 panel 色稀释，让图的色调透进侧栏 */
+  html:not(.dark) aside[data-testid="sidebar"] {
+    background: color-mix(in srgb, var(--color-panel, rgb(250 248 240/.72)) 70%, transparent) !important;
+  }
 `;
 // 右侧浮层面板（文件预览/Git 审查等）兜底：这类容器与主区共用透明变量且无稳定
 // DOM 特征，用「右半区 + 大尺寸 + 全透明 + 内容丰富」特征动态补实底，
 // 否则代码文字直接叠在背景图上不可读。布局空容器因内容少被排除。
 const PANEL_GUARD = `
-  if (window.__zdsPanelGuardV >= 3) return;
-  window.__zdsPanelGuardV = 3;
+  if (window.__zdsPanelGuardV >= 4) return;
+  window.__zdsPanelGuardV = 4;
   const panelColor = () => document.documentElement.classList.contains("dark")
     ? "rgb(13 15 18 / .97)" : "rgb(250 248 240 / .97)";
   const patch = () => {
@@ -170,15 +174,47 @@ const PANEL_GUARD = `
       }
     }
   };
+  // 设置页兜底：左侧分类导航与内容区全透明（文字叠图不可读）。
+  // 以导航项文本“常规”定位列表容器补实底；内容区（含“界面主题”的宽容器）同样补底。
+  const patchSettings = () => {
+    const navNames = ["常规", "外观", "模型设置", "浏览器控制", "电脑控制", "键盘快捷键", "记忆", "子智能体", "插件", "MCP 服务器", "技能", "命令", "钩子", "使用统计", "引导"];
+    // 设置导航分多组（基础设置/Agent 能力/数据与执行），逐项定位所属列表并逐组补底
+    const lists = new Set();
+    for (const name of navNames) {
+      for (const el of document.querySelectorAll("button, a, [role=tab], li, div")) {
+        if (el.closest(".history-message")) continue;
+        const r = el.getBoundingClientRect();
+        if (r.left > 420 || r.width === 0) continue;
+        if ((el.textContent || "").trim() !== name) continue;
+        if (el.offsetWidth > 0 && el.offsetWidth < 400 && el.children.length <= 2) {
+          let list = el.parentElement;
+          let d = 0;
+          while (list && d < 6 && list.offsetWidth < 200) { list = list.parentElement; d++; }
+          if (list && list.offsetWidth >= 200 && list.offsetWidth < 500) lists.add(list);
+        }
+        break;
+      }
+    }
+    for (const list of lists) {
+      if (list.dataset.zdsPanelColor !== panelColor()) {
+        list.dataset.zdsPanel = "1";
+        list.dataset.zdsPanelColor = panelColor();
+        list.style.backgroundColor = panelColor();
+        list.style.borderRadius = "16px";
+        list.style.padding = "10px 8px";
+      }
+    }
+  };
   let raf = 0;
+  const patchAll = () => { patch(); patchSettings(); };
   const mo = new MutationObserver(() => {
     if (raf) return;
-    raf = requestAnimationFrame(() => { raf = 0; patch(); });
+    raf = requestAnimationFrame(() => { raf = 0; patchAll(); });
   });
   mo.observe(document.body, { childList: true, subtree: true });
   // 外观切换时重刷面板颜色
-  new MutationObserver(patch).observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
-  patch();
+  new MutationObserver(patchAll).observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+  patchAll();
 `;
 
 // ---------- CDP 工具 ----------
