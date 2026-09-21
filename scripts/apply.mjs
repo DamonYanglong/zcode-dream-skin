@@ -126,11 +126,42 @@ const CHROME_CSS = `
     border-radius: 16px !important;
     padding: 10px 16px !important;
     margin-bottom: 12px !important;
-    max-width: 760px !important;
+    max-width: 940px !important;
   }
   html:not(.dark):has(.history-message) .history-message {
     background: rgb(250 247 240/.94) !important;
     border-color: rgb(0 0 0/.06) !important;
+  }
+`;
+// 右侧浮层面板（文件预览/Git 审查等）兜底：这类容器与主区共用透明变量且无稳定
+// DOM 特征，用「右半区 + 大尺寸 + 全透明 + 内容丰富」特征动态补实底，
+// 否则代码文字直接叠在背景图上不可读。布局空容器因内容少被排除。
+const PANEL_GUARD = `
+  if (!window.__zdsPanelGuard) {
+    window.__zdsPanelGuard = true;
+    const patch = () => {
+      for (const el of document.querySelectorAll("body div")) {
+        if (el.dataset.zdsPanel) continue;
+        const r = el.getBoundingClientRect ? el.getBoundingClientRect() : null;
+        if (!r) continue;
+        if (r.width < 400 || r.height < 400) continue;
+        if (r.left < window.innerWidth * 0.45) continue;
+        if ((el.innerText || "").length < 200) continue;
+        const cs = getComputedStyle(el);
+        if (cs.backgroundColor === "rgba(0, 0, 0, 0)" && (!cs.backgroundImage || cs.backgroundImage === "none")) {
+          el.dataset.zdsPanel = "1";
+          el.style.backgroundColor = "rgb(13 15 18 / .97)";
+          el.style.borderRadius = "16px";
+        }
+      }
+    };
+    let raf = 0;
+    const mo = new MutationObserver(() => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => { raf = 0; patch(); });
+    });
+    mo.observe(document.body, { childList: true, subtree: true });
+    patch();
   }
 `;
 
@@ -197,6 +228,9 @@ const injectExpr = `(() => {
   s3.id = "zds-chrome";
   s3.textContent = ${JSON.stringify(CHROME_CSS)};
   document.head.append(s1, s2, s3);
+  const guard = document.createElement("script");
+  guard.textContent = ${JSON.stringify(PANEL_GUARD)};
+  document.head.append(guard);
   de.setAttribute("data-zds-theme", ${JSON.stringify(THEME)});
   ${forceDark ? `if (!de.classList.contains("dark")) { de.classList.add("dark"); de.dataset.zdsForcedDark = "1"; }
   if (!de.dataset.zdsOrigTheme) de.dataset.zdsOrigTheme = de.classList.contains("theme-zai-dark") ? "theme-zai-dark" : "theme-zai-light";
