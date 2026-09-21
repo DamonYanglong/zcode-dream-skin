@@ -120,17 +120,17 @@ const CHROME_CSS = `
       var(--zds-bg) !important;
   }
   html:has(.history-message) .history-message {
-    /* 近实底：Codex 的消息卡片底来自原生 token（panel 实色），不是半透明透图 */
-    background: rgb(16 16 18/.94) !important;
-    border: 1px solid rgb(255 255 255/.06) !important;
+    /* 卡片底引用主题自身 --color-card（带主题色调的半透明，如 miku 深蓝 .88）：
+       有皮肤氛围且文字可读。卡片随容器全宽 */
+    background: var(--color-card, rgb(16 16 18/.94)) !important;
+    border: 1px solid var(--color-border, rgb(255 255 255/.06)) !important;
     border-radius: 16px !important;
     padding: 10px 16px !important;
     margin-bottom: 12px !important;
-    max-width: 940px !important;
   }
   html:not(.dark):has(.history-message) .history-message {
-    background: rgb(250 247 240/.94) !important;
-    border-color: rgb(0 0 0/.06) !important;
+    background: var(--color-card, rgb(250 247 240/.94)) !important;
+    border-color: var(--color-border, rgb(0 0 0/.06)) !important;
   }
 `;
 // 右侧浮层面板（文件预览/Git 审查等）兜底：这类容器与主区共用透明变量且无稳定
@@ -216,8 +216,9 @@ const forceLight = theme.appearance === "light";
 const injectExpr = `(() => {
   const de = document.documentElement;
   de.removeAttribute("data-zds-theme");
-  document.getElementById(${JSON.stringify(STYLE_ROOT_ID)})?.remove();
-  document.getElementById(${JSON.stringify(STYLE_THEME_ID)})?.remove();
+  for (const id of [${JSON.stringify(STYLE_ROOT_ID)}, ${JSON.stringify(STYLE_THEME_ID)}, "zds-chrome"]) {
+    for (const el of document.querySelectorAll("#" + CSS.escape(id))) el.remove();
+  }
   const s1 = document.createElement("style");
   s1.id = ${JSON.stringify(STYLE_ROOT_ID)};
   s1.textContent = ":root{--zds-bg:url(" + ${JSON.stringify(bgFileUrl)} + ")}";
