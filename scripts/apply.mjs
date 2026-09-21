@@ -124,14 +124,14 @@ const CHROME_CSS = `
        有皮肤氛围且文字可读。max-width:none 覆盖 ZCode 原生消息限宽(760px)，
        使卡片与输入框同宽 */
     max-width: none !important;
-    background: var(--color-card, rgb(16 16 18/.94)) !important;
+    background: color-mix(in srgb, var(--color-card, rgb(16 16 18/.94)) 82%, transparent) !important;
     border: 1px solid var(--color-border, rgb(255 255 255/.06)) !important;
     border-radius: 16px !important;
     padding: 10px 16px !important;
     margin-bottom: 12px !important;
   }
   html:not(.dark):has(.history-message) .history-message {
-    background: var(--color-card, rgb(250 247 240/.94)) !important;
+    background: color-mix(in srgb, var(--color-card, rgb(250 247 240/.94)) 82%, transparent) !important;
     border-color: var(--color-border, rgb(0 0 0/.06)) !important;
   }
 `;
