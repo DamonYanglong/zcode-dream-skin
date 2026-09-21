@@ -121,7 +121,9 @@ const CHROME_CSS = `
   }
   html:has(.history-message) .history-message {
     /* 卡片底引用主题自身 --color-card（带主题色调的半透明，如 miku 深蓝 .88）：
-       有皮肤氛围且文字可读。卡片随容器全宽 */
+       有皮肤氛围且文字可读。max-width:none 覆盖 ZCode 原生消息限宽(760px)，
+       使卡片与输入框同宽 */
+    max-width: none !important;
     background: var(--color-card, rgb(16 16 18/.94)) !important;
     border: 1px solid var(--color-border, rgb(255 255 255/.06)) !important;
     border-radius: 16px !important;
