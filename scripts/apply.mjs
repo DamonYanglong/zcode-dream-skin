@@ -131,7 +131,7 @@ const CHROME_CSS = `
     margin-bottom: 12px !important;
   }
   html:not(.dark):has(.history-message) .history-message {
-    background: color-mix(in srgb, var(--color-card, rgb(250 247 240/.94)) 82%, transparent) !important;
+    background: color-mix(in srgb, var(--color-card, rgb(250 247 240/.94)) 70%, transparent) !important;
     border-color: var(--color-border, rgb(0 0 0/.06)) !important;
   }
 `;
