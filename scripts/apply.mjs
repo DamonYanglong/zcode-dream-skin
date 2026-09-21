@@ -139,32 +139,46 @@ const CHROME_CSS = `
 // DOM 特征，用「右半区 + 大尺寸 + 全透明 + 内容丰富」特征动态补实底，
 // 否则代码文字直接叠在背景图上不可读。布局空容器因内容少被排除。
 const PANEL_GUARD = `
-  if (!window.__zdsPanelGuard) {
-    window.__zdsPanelGuard = true;
-    const patch = () => {
-      for (const el of document.querySelectorAll("body div")) {
-        if (el.dataset.zdsPanel) continue;
-        const r = el.getBoundingClientRect ? el.getBoundingClientRect() : null;
-        if (!r) continue;
-        if (r.width < 400 || r.height < 400) continue;
-        if (r.left < window.innerWidth * 0.45) continue;
-        if ((el.innerText || "").length < 200) continue;
-        const cs = getComputedStyle(el);
-        if (cs.backgroundColor === "rgba(0, 0, 0, 0)" && (!cs.backgroundImage || cs.backgroundImage === "none")) {
-          el.dataset.zdsPanel = "1";
-          el.style.backgroundColor = "rgb(13 15 18 / .97)";
-          el.style.borderRadius = "16px";
-        }
+  if (window.__zdsPanelGuardV >= 3) return;
+  window.__zdsPanelGuardV = 3;
+  const panelColor = () => document.documentElement.classList.contains("dark")
+    ? "rgb(13 15 18 / .97)" : "rgb(250 248 240 / .97)";
+  const patch = () => {
+    const c = panelColor();
+    // 壳切换后刷新已补底面板的颜色
+    for (const el of document.querySelectorAll("[data-zds-panel]")) {
+      if (el.dataset.zdsPanelColor !== c) {
+        el.dataset.zdsPanelColor = c;
+        el.style.backgroundColor = c;
       }
-    };
-    let raf = 0;
-    const mo = new MutationObserver(() => {
-      if (raf) return;
-      raf = requestAnimationFrame(() => { raf = 0; patch(); });
-    });
-    mo.observe(document.body, { childList: true, subtree: true });
-    patch();
-  }
+    }
+    for (const el of document.querySelectorAll("body div")) {
+      if (el.dataset.zdsPanel) continue;
+      const r = el.getBoundingClientRect ? el.getBoundingClientRect() : null;
+      if (!r) continue;
+      if (r.width < 400 || r.height < 400) continue;
+      if (r.left < window.innerWidth * 0.45) continue;
+      const cs = getComputedStyle(el);
+      // 不透明度不足 0.8 的都视为"不够实"（半透明白底叠亮图同样毁可读性）
+      const alphaMatch = /rgba?\([^)]*[,/]\s*([\d.]+)\s*\)$/.exec(cs.backgroundColor);
+      const alpha = alphaMatch ? parseFloat(alphaMatch[1]) : (cs.backgroundColor === "rgba(0, 0, 0, 0)" ? 0 : 1);
+      if (alpha < 0.8 && (!cs.backgroundImage || cs.backgroundImage === "none")) {
+        el.dataset.zdsPanel = "1";
+        el.dataset.zdsPanelColor = c;
+        el.style.backgroundColor = c;
+        el.style.borderRadius = "16px";
+      }
+    }
+  };
+  let raf = 0;
+  const mo = new MutationObserver(() => {
+    if (raf) return;
+    raf = requestAnimationFrame(() => { raf = 0; patch(); });
+  });
+  mo.observe(document.body, { childList: true, subtree: true });
+  // 外观切换时重刷面板颜色
+  new MutationObserver(patch).observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+  patch();
 `;
 
 // ---------- CDP 工具 ----------
@@ -231,10 +245,11 @@ const injectExpr = `(() => {
   s3.id = "zds-chrome";
   s3.textContent = ${JSON.stringify(CHROME_CSS)};
   document.head.append(s1, s2, s3);
-  const guard = document.createElement("script");
-  guard.textContent = ${JSON.stringify(PANEL_GUARD)};
-  document.head.append(guard);
   de.setAttribute("data-zds-theme", ${JSON.stringify(THEME)});
+  // 面板兜底直接在注入表达式内初始化（inline <script> 会被 CSP 拦截）
+  (() => {
+    ${PANEL_GUARD}
+  })();
   ${forceDark ? `if (!de.classList.contains("dark")) { de.classList.add("dark"); de.dataset.zdsForcedDark = "1"; }
   if (!de.dataset.zdsOrigTheme) de.dataset.zdsOrigTheme = de.classList.contains("theme-zai-dark") ? "theme-zai-dark" : "theme-zai-light";
   de.classList.remove("theme-zai-light", "theme-zai-dark");
