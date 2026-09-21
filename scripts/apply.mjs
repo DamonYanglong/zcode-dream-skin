@@ -104,6 +104,35 @@ if (theme.image) {
   console.log(`[zds] 背景图 ${theme.image}（${(size / 1024).toFixed(0)} KiB）→ ${bgFileUrl}`);
 }
 
+// 引擎公共层：对话页「消息窄列卡片化 + 薄蒙层」。可读性由消息卡片承担，
+// 背景图大面积裸露（对齐 Codex 观感）；在主题 CSS 之后注入，覆盖其对话页蒙层。
+const CHROME_CSS = `
+  html:has(.history-message) {
+    background-image:
+      linear-gradient(180deg, rgb(8 10 14/.08) 0%, rgb(8 10 14/.14) 32%, rgb(8 10 14/.59) 68%, rgb(8 10 14/.78) 100%),
+      linear-gradient(90deg, rgb(8 10 14/.44) 0%, rgb(8 10 14/.28) 48%, rgb(8 10 14/.09) 100%),
+      var(--zds-bg) !important;
+  }
+  html:not(.dark):has(.history-message) {
+    background-image:
+      linear-gradient(180deg, rgb(250 247 238/.06) 0%, rgb(250 247 238/.16) 32%, rgb(250 247 238/.56) 68%, rgb(250 247 238/.72) 100%),
+      linear-gradient(90deg, rgb(250 247 238/.49) 0%, rgb(250 247 238/.29) 48%, rgb(250 247 238/.09) 100%),
+      var(--zds-bg) !important;
+  }
+  html:has(.history-message) .history-message {
+    background: rgb(8 10 14/.74) !important;
+    border: 1px solid rgb(255 255 255/.06) !important;
+    border-radius: 16px !important;
+    padding: 10px 16px !important;
+    margin-bottom: 12px !important;
+    max-width: 760px !important;
+  }
+  html:not(.dark):has(.history-message) .history-message {
+    background: rgb(250 247 240/.8) !important;
+    border-color: rgb(0 0 0/.06) !important;
+  }
+`;
+
 // ---------- CDP 工具 ----------
 async function listTargets() {
   const res = await fetch(`http://${HOST}:${PORT}/json`);
@@ -163,7 +192,10 @@ const injectExpr = `(() => {
   const s2 = document.createElement("style");
   s2.id = ${JSON.stringify(STYLE_THEME_ID)};
   s2.textContent = ${JSON.stringify(themeCss)};
-  document.head.append(s1, s2);
+  const s3 = document.createElement("style");
+  s3.id = "zds-chrome";
+  s3.textContent = ${JSON.stringify(CHROME_CSS)};
+  document.head.append(s1, s2, s3);
   de.setAttribute("data-zds-theme", ${JSON.stringify(THEME)});
   ${forceDark ? `if (!de.classList.contains("dark")) { de.classList.add("dark"); de.dataset.zdsForcedDark = "1"; }
   if (!de.dataset.zdsOrigTheme) de.dataset.zdsOrigTheme = de.classList.contains("theme-zai-dark") ? "theme-zai-dark" : "theme-zai-light";

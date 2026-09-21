@@ -13,7 +13,7 @@ import { supportDir } from "./lib/platform.mjs";
 const args = process.argv.slice(2);
 const PORT = Number(args[args.indexOf("--port") + 1] || process.env.ZDS_PORT || "9342");
 const HOST = "127.0.0.1";
-const STYLE_IDS = ["zds-root-vars", "zds-theme-css"];
+const STYLE_IDS = ["zds-root-vars", "zds-theme-css", "zds-chrome"];
 
 const restoreExpr = `(() => {
   const de = document.documentElement;
