@@ -226,7 +226,11 @@ const PANEL_GUARD = `
     }
   };
   let raf = 0;
-  const patchAll = () => { patch(); checkSettingsMode(); };
+  const patchAll = () => {
+    // 设置页打开期间跳过面板补丁：否则补底与清理互相触发 mutation 形成循环
+    if (!settingsOpen()) patch();
+    checkSettingsMode();
+  };
   const mo = new MutationObserver(() => {
     if (raf) return;
     raf = requestAnimationFrame(() => { raf = 0; patchAll(); });
