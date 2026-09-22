@@ -359,23 +359,48 @@ if (pages.length === 0) {
 }
 
 let okCount = 0;
+const waitPageReady = async (page) => {
+  // 页面加载完成才注入：更新后首次启动会有恢复会话流程的二次导航，
+  // 过早注入会随导航丢失
+  for (let i = 0; i < 40; i++) {
+    try {
+      const r = await runCdp(page.webSocketDebuggerUrl, [
+        { method: "Runtime.evaluate", params: { expression: `document.readyState`, returnByValue: true } },
+      ]);
+      if (r[0]?.result?.result?.value === "complete") return true;
+    } catch { /* 连接抖动，继续等 */ }
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  return false;
+};
+
 for (const page of pages) {
   const label = page.title || page.url.slice(0, 80);
-  try {
-    const results = await runCdp(page.webSocketDebuggerUrl, [
-      evalCmd(injectExpr),
-      evalCmd(verifyExpr),
-    ]);
-    const injected = results[0]?.result?.result?.value;
-    const verified = results[1]?.result?.result?.value;
-    if (injected === "applied" && verified?.theme === THEME && verified.themeStyle) {
-      okCount++;
-      console.log(`[zds] ✓ 已注入 «${label}»（dark=${verified.dark}）`);
-    } else {
-      console.error(`[zds] ✗ «${label}» 注入未验证通过: ${JSON.stringify(verified)}`);
+  let ok = false;
+  // 注入后立即验证，未通过（如启动期二次导航丢注入）则等页面稳定后重试
+  for (let attempt = 1; attempt <= 3 && !ok; attempt++) {
+    if (attempt > 1) {
+      console.log(`[zds] … 第 ${attempt} 次重试（等待页面稳定）`);
+      await new Promise((r) => setTimeout(r, 2500));
     }
-  } catch (e) {
-    console.error(`[zds] ✗ «${label}» 注入失败: ${e.message}`);
+    await waitPageReady(page);
+    try {
+      const results = await runCdp(page.webSocketDebuggerUrl, [
+        evalCmd(injectExpr),
+        evalCmd(verifyExpr),
+      ]);
+      const injected = results[0]?.result?.result?.value;
+      const verified = results[1]?.result?.result?.value;
+      if (injected === "applied" && verified?.theme === THEME && verified.themeStyle) {
+        ok = true;
+        okCount++;
+        console.log(`[zds] ✓ 已注入 «${label}»（dark=${verified.dark}${attempt > 1 ? ", 重试第 " + (attempt - 1) + " 次" : ""}）`);
+      } else if (attempt === 3) {
+        console.error(`[zds] ✗ «${label}» 注入未验证通过: ${JSON.stringify(verified)}`);
+      }
+    } catch (e) {
+      if (attempt === 3) console.error(`[zds] ✗ «${label}» 注入失败: ${e.message}`);
+    }
   }
 }
 
