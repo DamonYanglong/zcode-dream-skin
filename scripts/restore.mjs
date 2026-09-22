@@ -23,6 +23,17 @@ const restoreExpr = `(() => {
     return !!el;
   });
   de.removeAttribute("data-zds-theme");
+  // 清 guard 痕迹：补底元素样式与标记、guard 状态
+  for (const el of document.querySelectorAll("[data-zds-panel]")) {
+    delete el.dataset.zdsPanel;
+    delete el.dataset.zdsPanelColor;
+    el.style.backgroundColor = "";
+    el.style.borderRadius = "";
+    el.style.padding = "";
+  }
+  delete window.__zdsPanelGuardV;
+  delete window.__zdsSkinSnapshot;
+  delete window.__zdsSkinHidden;
   if (de.dataset.zdsForcedDark) { de.classList.remove("dark"); delete de.dataset.zdsForcedDark; }
   if (de.dataset.zdsOrigTheme) {
     de.classList.remove("theme-zai-light", "theme-zai-dark");

@@ -143,8 +143,8 @@ const CHROME_CSS = `
 // DOM 特征，用「右半区 + 大尺寸 + 全透明 + 内容丰富」特征动态补实底，
 // 否则代码文字直接叠在背景图上不可读。布局空容器因内容少被排除。
 const PANEL_GUARD = `
-  if (window.__zdsPanelGuardV >= 5) return;
-  window.__zdsPanelGuardV = 5;
+  if (window.__zdsPanelGuardV >= 6) return;
+  window.__zdsPanelGuardV = 6;
   const panelColor = () => document.documentElement.classList.contains("dark")
     ? "rgb(13 15 18 / .97)" : "rgb(250 248 240 / .97)";
   const patch = () => {
@@ -177,44 +177,56 @@ const PANEL_GUARD = `
   // 设置页兜底（整页方案）：设置是全屏路由页，内容直接叠图且各分类结构不一，
   // 逐容器补丁疲于奔命——改为给设置页根容器打整页协调蒙层（内容可读、图隐约透出），
   // 左侧导航列表保留近实底。
-  const patchSettings = () => {
-    let navItem = null;
+  // 设置页整体排除在皮肤之外（用户决策）：打开设置 → 移除全部皮肤元素回归原生；
+  // 关闭设置 → 按快照恢复皮肤。原生 UI 的可读性由 ZCode 自己保证。
+  const settingsOpen = () => {
     for (const el of document.querySelectorAll("button, a, [role=tab], li, div")) {
       if (el.closest(".history-message")) continue;
       const r = el.getBoundingClientRect();
       if (r.left > 420 || r.width === 0) continue;
-      if ((el.textContent || "").trim() === "常规" && el.offsetWidth > 0 && el.offsetWidth < 400) { navItem = el; break; }
+      if ((el.textContent || "").trim() === "常规" && el.offsetWidth > 0 && el.offsetWidth < 400) return true;
     }
-    if (!navItem) return; // 设置页未打开
-    // 向上找设置页根：宽度达到主区量级（全屏路由页）的容器
-    let root = navItem;
-    for (let d = 0; d < 12 && root; d++) {
-      const r = root.getBoundingClientRect();
-      if (r.width >= window.innerWidth - 80) break;
-      root = root.parentElement;
+    return false;
+  };
+  const stripSkin = () => {
+    const snap = (window.__zdsSkinSnapshot ||= { styles: [] });
+    for (const id of ["zds-root-vars", "zds-theme-css", "zds-chrome"]) {
+      const el = document.getElementById(id);
+      if (el) { snap.styles.push({ id, text: el.textContent }); el.remove(); }
     }
-    if (!root || root === document.body || root.dataset.zdsSettings) return;
-    root.dataset.zdsSettings = "1";
-    root.dataset.zdsSettingsColor = panelColor();
-    root.style.backgroundColor = document.documentElement.classList.contains("dark")
-      ? "rgb(13 15 18 / .58)" : "rgb(248 246 240 / .58)";
-    root.style.borderRadius = "16px";
-    // 左侧导航列表仍保留近实底
-    let list = navItem.parentElement;
-    for (let d = 0; d < 6 && list; d++) {
-      if (list.offsetWidth > 120 && list.offsetWidth < 500) break;
-      list = list.parentElement;
+    snap.theme = document.documentElement.getAttribute("data-zds-theme");
+    document.documentElement.removeAttribute("data-zds-theme");
+    for (const el of document.querySelectorAll("[data-zds-panel]")) {
+      delete el.dataset.zdsPanel;
+      delete el.dataset.zdsPanelColor;
+      el.style.backgroundColor = "";
+      el.style.borderRadius = "";
     }
-    if (list && !list.dataset.zdsPanel) {
-      list.dataset.zdsPanel = "1";
-      list.dataset.zdsPanelColor = panelColor();
-      list.style.backgroundColor = panelColor();
-      list.style.borderRadius = "16px";
-      list.style.padding = "10px 8px";
+  };
+  const restoreSkin = () => {
+    const snap = window.__zdsSkinSnapshot;
+    if (!snap) return;
+    for (const s of snap.styles) {
+      if (!document.getElementById(s.id)) {
+        const el = document.createElement("style");
+        el.id = s.id;
+        el.textContent = s.text;
+        document.head.append(el);
+      }
+    }
+    if (snap.theme) document.documentElement.setAttribute("data-zds-theme", snap.theme);
+    window.__zdsSkinSnapshot = null;
+  };
+  const checkSettingsMode = () => {
+    if (settingsOpen()) {
+      if (!window.__zdsSkinHidden) { window.__zdsSkinHidden = true; stripSkin(); }
+    } else if (window.__zdsSkinHidden) {
+      window.__zdsSkinHidden = false;
+      restoreSkin();
     }
   };
   let raf = 0;
-  const patchAll = () => { patch(); patchSettings(); };
+  const patchAll = () => { patch(); checkSettingsMode(); };
   const mo = new MutationObserver(() => {
     if (raf) return;
     raf = requestAnimationFrame(() => { raf = 0; patchAll(); });
